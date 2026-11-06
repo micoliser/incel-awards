@@ -1,0 +1,281 @@
+@import "tailwindcss";
+
+:root {
+  /* Gala stage night — awards ceremony */
+  --ground: #07090f;
+  --ground-deep: #0e1320;
+  --ink: #f4f1ea;
+  --ink-muted: #9aa3b5;
+  --indigo: #3d5a8a;
+  --indigo-deep: #151c2e;
+  --gold: #d4a84b;
+  --gold-bright: #f0d078;
+  --teal: #3d9b7a;
+  --tourism: #3d9b7a;
+  --global: #5b7fb5;
+  --shared: #c4a35a;
+  --stripe-gap: #0a0d16;
+  --focus: #f0d078;
+  --danger: #e85d5d;
+  --surface: #121826;
+  --rule: color-mix(in srgb, var(--gold) 22%, transparent);
+
+  --background: var(--ground);
+  --foreground: var(--ink);
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spotlight: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-ground: var(--ground);
+  --color-ground-deep: var(--ground-deep);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-indigo: var(--indigo);
+  --color-indigo-deep: var(--indigo-deep);
+  --color-gold: var(--gold);
+  --color-gold-bright: var(--gold-bright);
+  --color-teal: var(--teal);
+  --color-tourism: var(--tourism);
+  --color-global: var(--global);
+  --color-shared: var(--shared);
+  --color-surface: var(--surface);
+  --color-rule: var(--rule);
+  --font-display: var(--font-syne);
+  --font-sans: var(--font-commissioner);
+  --font-label: var(--font-archivo);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--gold) 45%, transparent);
+  color: var(--ink);
+}
+
+html {
+  scroll-behavior: smooth;
+  color-scheme: dark;
+}
+
+body {
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--font-commissioner), ui-sans-serif, sans-serif;
+  min-height: 100%;
+  text-wrap: pretty;
+}
+
+/* Stage night atmosphere — tonal planes, no radial gold halo */
+.weave-ground {
+  background-color: var(--ground);
+  background-image:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--indigo-deep) 75%, var(--ground)) 0%,
+      var(--ground) 38%,
+      color-mix(in srgb, var(--teal) 10%, var(--ground)) 100%
+    );
+}
+
+.weave-band {
+  background: linear-gradient(
+    90deg,
+    var(--ground) 0%,
+    var(--indigo) 18%,
+    var(--gold) 42%,
+    var(--teal) 62%,
+    var(--gold-bright) 82%,
+    var(--ground) 100%
+  );
+  background-size: 200% 100%;
+  animation: sash-drift 14s linear infinite;
+}
+
+.axial-rule {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--indigo) 12%,
+    var(--gold) 50%,
+    var(--indigo) 88%,
+    transparent
+  );
+  opacity: 0.65;
+}
+
+.thread-link {
+  position: relative;
+  text-decoration: none;
+  color: inherit;
+}
+
+.thread-link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -0.15em;
+  height: 2px;
+  background: linear-gradient(90deg, var(--gold), var(--gold-bright));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 420ms var(--ease-out-expo);
+}
+
+.thread-link:hover::after,
+.thread-link:focus-visible::after {
+  transform: scaleX(1);
+}
+
+.gold-shimmer {
+  background: linear-gradient(
+    105deg,
+    var(--gold) 0%,
+    var(--gold-bright) 35%,
+    #fff6d6 50%,
+    var(--gold-bright) 65%,
+    var(--gold) 100%
+  );
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shimmer-sweep 4.5s var(--ease-spotlight) infinite;
+}
+
+.stage-panel {
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  border: 1px solid var(--rule);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--gold) 6%, transparent),
+    0 24px 48px -28px rgba(0, 0, 0, 0.75);
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+
+@keyframes weft-in {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes band-draw {
+  from {
+    transform: scaleX(0.12);
+    opacity: 0;
+  }
+  to {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+}
+
+@keyframes sash-drift {
+  from {
+    background-position: 0% 50%;
+  }
+  to {
+    background-position: 200% 50%;
+  }
+}
+
+@keyframes shimmer-sweep {
+  0%,
+  28% {
+    background-position: 100% 50%;
+  }
+  55%,
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes spotlight-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+@keyframes trophy-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-weft {
+  animation: weft-in 950ms var(--ease-out-expo) both;
+}
+
+.animate-weft-delay-1 {
+  animation-delay: 90ms;
+}
+
+.animate-weft-delay-2 {
+  animation-delay: 180ms;
+}
+
+.animate-weft-delay-3 {
+  animation-delay: 280ms;
+}
+
+.animate-band {
+  transform-origin: left center;
+  animation: band-draw 1200ms var(--ease-out-expo) both;
+}
+
+.animate-spotlight {
+  animation: spotlight-pulse 5.5s ease-in-out infinite;
+}
+
+.animate-trophy {
+  animation: trophy-rise 800ms var(--ease-out-expo) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-weft,
+  .animate-weft-delay-1,
+  .animate-weft-delay-2,
+  .animate-weft-delay-3,
+  .animate-band,
+  .animate-spotlight,
+  .animate-trophy,
+  .weave-band,
+  .gold-shimmer {
+    animation: none;
+  }
+
+  .gold-shimmer {
+    background: none;
+    color: var(--gold-bright);
+    -webkit-background-clip: unset;
+    background-clip: unset;
+  }
+
+  .thread-link::after {
+    transition: none;
+  }
+}

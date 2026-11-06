@@ -1,0 +1,48 @@
+# ==============================================================================
+# Incel Employee Awards — monorepo root
+# ==============================================================================
+
+# --- Secrets & local env (keep *.example tracked) ---
+.env
+.env.local
+.env.*.local
+**/.env
+!**/.env.example
+
+# --- OS / editor ---
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+*.code-workspace
+
+# --- Local design / agent tooling state ---
+.impeccable/
+.cursor/
+
+# --- Confidential committee / nomination materials ---
+# Source PDFs and spreadsheets with nominee lists must never be committed.
+*.pdf
+*.PDF
+*.xlsx
+*.xls
+*Committee Nominations*
+*Final Committee*
+/nominations/
+/committee/
+api/awards/seed/year_2026.py
+api/awards/seed/*_nominees*
+api/awards/seed/private/
+
+# --- Internal planning docs (not for GitHub) ---
+docs/domain-rules.md
+docs/IMPLEMENTATION_PLAN.md
+
+# --- Logs & local DB dumps ---
+*.log
+*.sql
+*.sqlite3
+dump.rdb

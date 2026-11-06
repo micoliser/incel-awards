@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>{% block title %}{{ sender_name }}{% endblock %}</title>
+  <style>
+    body, table, td, p, a, li, blockquote {
+      -webkit-text-size-adjust: 100%;
+      -ms-text-size-adjust: 100%;
+    }
+    table, td {
+      border-collapse: collapse;
+    }
+    img {
+      -ms-interpolation-mode: bicubic;
+      border: 0;
+      height: auto;
+      line-height: 100%;
+      outline: none;
+      text-decoration: none;
+    }
+    body {
+      margin: 0 !important;
+      padding: 0 !important;
+      width: 100% !important;
+      background-color: #f1f5f9;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      color: #334155;
+      line-height: 1.6;
+    }
+    .wrapper {
+      width: 100%;
+      background-color: #f1f5f9;
+      padding: 32px 12px;
+    }
+    .container {
+      max-width: 620px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    }
+    .header {
+      background: linear-gradient(135deg, #0a192f 0%, #0f284d 100%);
+      padding: 32px 28px 24px;
+      text-align: center;
+      border-bottom: 3px solid #d4af37;
+    }
+    .brand-title {
+      color: #ffffff;
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      margin: 0 0 4px;
+      text-transform: uppercase;
+    }
+    .brand-subtitle {
+      color: #d4af37;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin: 0;
+    }
+    .content {
+      padding: 32px 28px;
+    }
+    .footer {
+      background-color: #0a192f;
+      color: #94a3b8;
+      padding: 24px 28px;
+      text-align: center;
+      font-size: 12px;
+      border-top: 1px solid #1e293b;
+    }
+    .footer a {
+      color: #d4af37;
+      text-decoration: none;
+    }
+    .btn-gold {
+      display: inline-block;
+      background: linear-gradient(135deg, #d4af37 0%, #b89325 100%);
+      color: #0a192f !important;
+      font-weight: 800;
+      font-size: 14px;
+      padding: 12px 26px;
+      border-radius: 8px;
+      text-decoration: none;
+      letter-spacing: 0.5px;
+      text-align: center;
+    }
+    .info-card {
+      background-color: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 16px 18px;
+      margin: 18px 0;
+    }
+    @media only screen and (max-width: 600px) {
+      .content {
+        padding: 22px 16px !important;
+      }
+      .header {
+        padding: 24px 16px 18px !important;
+      }
+      .footer {
+        padding: 20px 16px !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="container">
+      <div class="header">
+        <h1 class="brand-title">{{ sender_name }}</h1>
+        <p class="brand-subtitle">{% block brand_subtitle %}Employee Awards{% endblock %}</p>
+      </div>
+
+      <div class="content">
+        {% block content %}{% endblock %}
+      </div>
+
+      <div class="footer">
+        <p style="margin: 0 0 8px; color: #cbd5e1; font-weight: 600;">
+          {{ sender_name }} &bull; Employee Awards
+        </p>
+        <p style="margin: 0 0 10px;">
+          Need assistance? Email <a href="mailto:{{ support_email }}">{{ support_email }}</a>
+        </p>
+        <p style="margin: 0; font-size: 11px; color: #64748b;">
+          &copy; {{ year|default:"2026" }} {{ sender_name }}. All rights reserved.
+        </p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

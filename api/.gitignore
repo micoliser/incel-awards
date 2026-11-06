@@ -1,0 +1,52 @@
+# Python
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+dist/
+build/
+*.egg
+
+# Django / local runtime
+*.sqlite3
+db.sqlite3
+test_db.sqlite3
+staticfiles/
+media/
+celerybeat-schedule
+celerybeat-schedule.*
+celerybeat.pid
+*.pid
+
+# Env & secrets
+.env
+.env.*
+!.env.example
+*.pem
+secrets/
+credentials*
+
+# Tests / coverage / tooling
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.tox/
+.cache/
+
+# Confidential nomination payloads (seeded from committee PDF locally only)
+awards/seed/year_2026.py
+awards/seed/*_nominees*
+awards/seed/private/
+*.pdf
+*.PDF
+*Committee Nominations*
+*.xlsx
+*.xls
+
+# OS
+.DS_Store

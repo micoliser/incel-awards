@@ -1,0 +1,65 @@
+{% extends "emails/base_email.html" %}
+
+{% block title %}Cast your vote — {{ year_title }}{% endblock %}
+
+{% block brand_subtitle %}{{ year_title }}{% endblock %}
+
+{% block content %}
+<p style="font-size: 14px; color: #334155; margin: 0 0 16px;">
+  Hi <strong>{{ first_name }}</strong>,
+</p>
+
+<p style="font-size: 14px; color: #334155; line-height: 1.6; margin: 0 0 20px;">
+  Voting for <strong>{{ year_title }}</strong> is about to open.
+  Use your personal ballot link below to cast your votes.
+</p>
+
+<div class="info-card">
+  <table style="width: 100%; border-collapse: collapse;">
+    <tr>
+      <td style="padding: 4px 0; font-size: 13px; color: #64748b; width: 140px;"><strong>Opens:</strong></td>
+      <td style="padding: 4px 0; font-size: 13px; color: #0a192f; font-weight: 700;">{{ voting_opens_formatted }}</td>
+    </tr>
+    <tr>
+      <td style="padding: 4px 0; font-size: 13px; color: #64748b;"><strong>Closes:</strong></td>
+      <td style="padding: 4px 0; font-size: 13px; color: #0a192f; font-weight: 700;">{{ voting_closes_formatted }}</td>
+    </tr>
+    {% if company_label %}
+    <tr>
+      <td style="padding: 4px 0; font-size: 13px; color: #64748b;"><strong>Your company:</strong></td>
+      <td style="padding: 4px 0; font-size: 13px; color: #0a192f;">{{ company_label }}</td>
+    </tr>
+    {% endif %}
+    <tr>
+      <td style="padding: 4px 0; font-size: 13px; color: #64748b;"><strong>Categories:</strong></td>
+      <td style="padding: 4px 0; font-size: 13px; color: #0a192f;">{{ award_count }} award{{ award_count|pluralize }} on your ballot</td>
+    </tr>
+  </table>
+</div>
+
+{% if award_names %}
+<p style="font-size: 13px; color: #64748b; margin: 0 0 8px;">
+  You will see categories such as:
+</p>
+<ul style="font-size: 13px; color: #475569; margin: 0 0 20px; padding-left: 20px;">
+  {% for name in award_names|slice:":8" %}
+  <li style="margin-bottom: 4px;">{{ name }}</li>
+  {% endfor %}
+  {% if award_count > 8 %}
+  <li style="margin-bottom: 4px;">…and {{ award_count|add:"-8" }} more</li>
+  {% endif %}
+</ul>
+{% endif %}
+
+<div style="text-align: center; margin: 28px 0 20px;">
+  <a href="{{ ballot_url }}" class="btn-gold">Open your ballot</a>
+</div>
+
+<p style="font-size: 12px; color: #64748b; line-height: 1.5; margin: 0 0 8px;">
+  This link is personal to you — please do not share it. If the button does not work,
+  copy and paste this URL into your browser:
+</p>
+<p style="font-size: 11px; color: #94a3b8; word-break: break-all; margin: 0;">
+  {{ ballot_url }}
+</p>
+{% endblock %}
