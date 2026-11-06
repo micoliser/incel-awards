@@ -101,11 +101,12 @@ Rotate the preview token from the year admin action if a link leaks.
 
 ## Production go-live
 
+Full CapRover / GHCR steps: **[DEPLOYMENT.md](./DEPLOYMENT.md)**.
+
 1. Set `ORG_USERS_API_*` to the real portal with `ORG_USERS_API_AUTH_SCHEME=Bearer`
    (disable `DEV_ORG_USERS_ENABLED`).
 2. SMTP + `EMAIL_ENABLED=True`, `EMAIL_DEBUG=False`.
-3. Run worker + beat (or systemd/supervisor). Optional cron fallback:
-   `*/5 * * * * cd /app && python manage.py run_season_tick`
+3. CapRover apps: API + frontend + Celery worker + Celery beat (shared Postgres/Redis).
 4. Admin: set open/close; confirm eligibility notice offset (default 10 min) and
    vote invite offset (often 60 min).
 5. After close: publish `results_published_at`.
