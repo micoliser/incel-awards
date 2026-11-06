@@ -6,7 +6,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from awards.models import Award, AwardYear, Nominee
-from awards.seed.year_2026 import seed_year_2026
+from awards.seed import seed_year_2026
 from people.models import OrgPerson
 from voting.models import BallotToken, Vote
 from voting.services.eligibility import awards_for_voter

@@ -25,6 +25,8 @@ Thumbs.db
 
 # --- Confidential committee / nomination materials ---
 # Source PDFs and spreadsheets with nominee lists must never be committed.
+# Public award catalogue + placeholder nominees: api/awards/seed/year_2026_fixture.py
+# Real nominees overlay (local/prod only): api/awards/seed/year_2026.py
 *.pdf
 *.PDF
 *.xlsx

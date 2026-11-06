@@ -1,7 +1,7 @@
 from django.test import TestCase
 
 from awards.models import Award, AwardNotificationConfig, AwardYear, Nominee
-from awards.seed.year_2026 import AWARDS, YEAR, seed_year_2026
+from awards.seed import AWARDS, YEAR, seed_year_2026
 
 
 class SeedYear2026Tests(TestCase):
@@ -50,10 +50,9 @@ class SeedYear2026Tests(TestCase):
         nominees = list(Nominee.objects.filter(award=rookie).order_by('sort_order'))
         self.assertEqual(len(nominees), 4)
         self.assertTrue(all(n.is_confirmed for n in nominees))
-        names = [n.display_name for n in nominees]
         self.assertEqual(
-            names,
-            ['Ayoola Adegoke', 'James Obande', 'Tobi', 'Peterson Paul'],
+            [n.display_name for n in nominees],
+            [n['display_name'] for n in next(a['nominees'] for a in AWARDS if a['slug'] == 'rookie-of-the-year')],
         )
 
     def test_employees_choice_has_no_criteria(self):

@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand
 
 from awards.models import Award
-from awards.seed.year_2026 import AWARDS, seed_year_2026
+from awards.seed import AWARDS, seed_year_2026
 
 
 class Command(BaseCommand):

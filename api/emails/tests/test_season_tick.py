@@ -5,7 +5,7 @@ from django.test import TestCase, override_settings
 from django.utils import timezone
 
 from awards.models import AwardNotificationConfig, AwardYear
-from awards.seed.year_2026 import seed_year_2026
+from awards.seed import seed_year_2026
 from emails.services.season import run_season_tick
 from people.dev_fixtures import build_dev_org_users
 from people.models import OrgPerson

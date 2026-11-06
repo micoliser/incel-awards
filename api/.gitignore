@@ -38,7 +38,8 @@ htmlcov/
 .tox/
 .cache/
 
-# Confidential nomination payloads (seeded from committee PDF locally only)
+# Real nominee overlay (seeded from committee PDF locally/prod only).
+# Public fixture with placeholders is committed as year_2026_fixture.py.
 awards/seed/year_2026.py
 awards/seed/*_nominees*
 awards/seed/private/
