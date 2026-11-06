@@ -12,6 +12,10 @@ type YearLayoutProps = {
 
 export async function generateStaticParams() {
   const years = await listYears();
+  // Cache Components requires ≥1 result at build time (API may be empty/unreachable in CI).
+  if (years.length === 0) {
+    return [{ year: String(new Date().getFullYear()) }];
+  }
   return years.map((y) => ({ year: String(y.year) }));
 }
 

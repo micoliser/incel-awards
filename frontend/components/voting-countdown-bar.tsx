@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 
 type CountdownMode = "opens" | "closes" | null;
 
@@ -62,20 +62,38 @@ function Unit({ value, label }: { value: string; label: string }) {
   );
 }
 
+let clientNow = 0;
+
+function subscribeNow(onStoreChange: () => void) {
+  clientNow = Date.now();
+  onStoreChange();
+  const id = window.setInterval(() => {
+    clientNow = Date.now();
+    onStoreChange();
+  }, 1000);
+  return () => window.clearInterval(id);
+}
+
+function getNowSnapshot() {
+  return clientNow;
+}
+
+function getServerNowSnapshot() {
+  return 0;
+}
+
 export function VotingCountdownBar({
   year,
   votingOpensAt,
   votingClosesAt,
 }: VotingCountdownBarProps) {
-  const [now, setNow] = useState<number | null>(null);
+  const now = useSyncExternalStore(
+    subscribeNow,
+    getNowSnapshot,
+    getServerNowSnapshot,
+  );
 
-  useEffect(() => {
-    setNow(Date.now());
-    const id = window.setInterval(() => setNow(Date.now()), 1000);
-    return () => window.clearInterval(id);
-  }, []);
-
-  if (now == null) {
+  if (now === 0) {
     // Reserve space when a schedule exists so the fixed header does not jump.
     if (!votingOpensAt && !votingClosesAt) return null;
     return (

@@ -12,6 +12,9 @@ import {
 import { getCurrentYear, listYears } from "@/lib/api";
 import { yearStatusLabel } from "@/lib/format";
 
+/** Home fetches live year data from the API; allow blocking navigation. */
+export const instant = false;
+
 export default async function HomePage() {
   const current = await getCurrentYear();
   const years = await listYears();

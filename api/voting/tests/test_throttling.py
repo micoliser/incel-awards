@@ -13,12 +13,15 @@ from awards.models import Award, AwardYear
 from awards.seed.year_2026 import seed_year_2026
 from people.models import OrgPerson
 from voting.models import BallotToken
+from voting.services.eligibility import awards_for_voter
 from voting.services.tokens import generate_ballot_tokens
 
 
 LOW_RATES = {
     'ballot_resolve': '2/min',
-    'ballot_vote': '2/min',
+    # Ballots are immutable after submit, so vote throttle must trip on the
+    # second attempt (first succeeds, second is 429 before already_submitted).
+    'ballot_vote': '1/min',
     'ballot_directory': '2/min',
 }
 
@@ -31,6 +34,23 @@ THROTTLE_TEST_DRF = {
     ],
     'DEFAULT_THROTTLE_RATES': LOW_RATES,
 }
+
+
+def _complete_votes_payload(person, year):
+    items = []
+    for award in awards_for_voter(person, year):
+        if award.voting_mode == Award.VotingMode.STAFF_OPEN:
+            items.append({
+                'award_slug': award.slug,
+                'selected_person_id': person.id,
+            })
+            continue
+        nominee = (
+            award.nominees.filter(is_confirmed=True).order_by('sort_order', 'id').first()
+        )
+        assert nominee is not None, f'No confirmed nominee for {award.slug}'
+        items.append({'award_slug': award.slug, 'nominee_id': nominee.id})
+    return {'votes': items}
 
 
 @override_settings(REST_FRAMEWORK=THROTTLE_TEST_DRF)
@@ -72,20 +92,13 @@ class BallotThrottleTests(APITestCase):
 
     def test_vote_submit_throttles_after_limit(self):
         url = reverse('ballot-votes', kwargs={'year': 2026})
-        award = Award.objects.get(year=self.year, slug='employee-of-the-year-tourism')
-        nominee = award.nominees.filter(is_confirmed=True).first()
-        payload = {
-            'votes': [
-                {'award_slug': award.slug, 'nominee_id': nominee.id},
-            ]
-        }
-        for _ in range(2):
-            response = self.client.put(
-                f'{url}?token={self.token}',
-                payload,
-                format='json',
-            )
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
+        payload = _complete_votes_payload(self.voter, self.year)
+        response = self.client.put(
+            f'{url}?token={self.token}',
+            payload,
+            format='json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         response = self.client.put(
             f'{url}?token={self.token}',
             payload,

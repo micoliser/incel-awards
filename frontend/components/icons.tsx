@@ -19,10 +19,9 @@ function baseProps({ title, ...props }: IconProps) {
 }
 
 export function IconStar(props: IconProps) {
-  const { title, ...rest } = props;
   return (
     <svg {...baseProps(props)}>
-      {title ? <title>{title}</title> : null}
+      {props.title ? <title>{props.title}</title> : null}
       <path d="M12 3.2 14.2 8.6l5.8.5-4.4 3.7 1.4 5.6L12 15.7 6.9 18.4l1.4-5.6L4 9.1l5.8-.5L12 3.2Z" />
     </svg>
   );
