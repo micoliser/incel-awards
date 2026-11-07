@@ -6,9 +6,9 @@ import logging
 from typing import Any, Optional
 
 from django.utils import timezone
-from django.utils.formats import date_format
 
 from emails.config import EmailConfig
+from emails.formatting import format_email_datetime
 from emails.services.base import BaseEmailService
 from emails.services.vote_invite_emails import frontend_base_url
 from voting.models import BallotInviteDelivery, BallotToken
@@ -17,13 +17,6 @@ logger = logging.getLogger(__name__)
 
 VOTE_CONFIRMATION_TEMPLATE = 'emails/vote_confirmation.html'
 EVENT = 'vote_confirmation'
-
-
-def _format_dt(value) -> str:
-    if value is None:
-        return 'just now'
-    local = timezone.localtime(value) if timezone.is_aware(value) else value
-    return date_format(local, 'DATETIME_FORMAT')
 
 
 def build_vote_confirmation_context(
@@ -43,11 +36,11 @@ def build_vote_confirmation_context(
         'year': year.year,
         'year_title': year.title,
         'submitted_at': token.submitted_at,
-        'submitted_at_formatted': _format_dt(token.submitted_at),
+        'submitted_at_formatted': format_email_datetime(
+            token.submitted_at, empty='just now'
+        ),
         'voting_closes_at': year.voting_closes_at,
-        'voting_closes_formatted': _format_dt(year.voting_closes_at)
-        if year.voting_closes_at
-        else 'TBD',
+        'voting_closes_formatted': format_email_datetime(year.voting_closes_at),
         'award_count': award_count,
         'company_label': company_label,
         'sender_name': EmailConfig.get_sender_name(),

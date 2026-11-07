@@ -2,11 +2,10 @@ import logging
 from typing import Any, Dict, Optional
 
 from django.conf import settings
-from django.utils import timezone
-from django.utils.formats import date_format
 
 from awards.models import AwardNotificationConfig, AwardYear
 from emails.config import EmailConfig
+from emails.formatting import format_email_datetime
 from emails.services.base import BaseEmailService
 from voting.models import BallotToken
 from voting.services.eligibility import awards_for_voter
@@ -24,13 +23,6 @@ def frontend_base_url() -> str:
 
 def year_hub_url(year: AwardYear) -> str:
     return f'{frontend_base_url()}/{year.year}'
-
-
-def _format_dt(value) -> str:
-    if value is None:
-        return 'TBD'
-    local = timezone.localtime(value) if timezone.is_aware(value) else value
-    return date_format(local, 'DATETIME_FORMAT')
 
 
 def build_eligibility_notice_context(
@@ -52,8 +44,8 @@ def build_eligibility_notice_context(
         'year_title': year.title,
         'voting_opens_at': year.voting_opens_at,
         'voting_closes_at': year.voting_closes_at,
-        'voting_opens_formatted': _format_dt(year.voting_opens_at),
-        'voting_closes_formatted': _format_dt(year.voting_closes_at),
+        'voting_opens_formatted': format_email_datetime(year.voting_opens_at),
+        'voting_closes_formatted': format_email_datetime(year.voting_closes_at),
         'year_url': year_hub_url(year),
         'company_label': company_label,
         'award_names': [a.name for a in awards],

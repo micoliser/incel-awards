@@ -5,10 +5,8 @@ from __future__ import annotations
 import logging
 from typing import Any, Optional
 
-from django.utils import timezone
-from django.utils.formats import date_format
-
 from emails.config import EmailConfig
+from emails.formatting import format_email_datetime
 from emails.services.base import BaseEmailService
 from emails.services.vote_invite_emails import ballot_vote_url, frontend_base_url
 from voting.models import BallotToken
@@ -20,13 +18,6 @@ VOTING_OPENED_TEMPLATE = 'emails/voting_opened.html'
 VOTING_CLOSED_TEMPLATE = 'emails/voting_closed.html'
 VOTING_OPENED_EVENT = 'voting_opened'
 VOTING_CLOSED_EVENT = 'voting_closed'
-
-
-def _format_dt(value) -> str:
-    if value is None:
-        return 'TBD'
-    local = timezone.localtime(value) if timezone.is_aware(value) else value
-    return date_format(local, 'DATETIME_FORMAT')
 
 
 def _base_context(
@@ -46,8 +37,8 @@ def _base_context(
         'year_title': year.title,
         'voting_opens_at': year.voting_opens_at,
         'voting_closes_at': year.voting_closes_at,
-        'voting_opens_formatted': _format_dt(year.voting_opens_at),
-        'voting_closes_formatted': _format_dt(year.voting_closes_at),
+        'voting_opens_formatted': format_email_datetime(year.voting_opens_at),
+        'voting_closes_formatted': format_email_datetime(year.voting_closes_at),
         'ballot_url': ballot_vote_url(token),
         'results_url': f'{frontend_base_url()}/{year.year}/results',
         'company_label': company_label,

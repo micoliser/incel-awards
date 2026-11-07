@@ -108,7 +108,9 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'UTC'
+# Match frontend (Africa/Lagos) so admin + emails via timezone.localtime() show WAT.
+# Storage remains UTC when USE_TZ=True; override with DJANGO_TIME_ZONE if needed.
+TIME_ZONE = os.getenv('DJANGO_TIME_ZONE', 'Africa/Lagos')
 USE_I18N = True
 USE_TZ = True
 

@@ -1,3 +1,4 @@
+from django import forms
 from django.conf import settings
 from django.contrib import admin, messages
 from django.utils.html import format_html
@@ -9,6 +10,14 @@ from awards.models import (
     AwardYear,
     Nominee,
 )
+
+OPEN_OFFSET_EVENTS = {
+    AwardNotificationConfig.Event.ELIGIBILITY_NOTICE,
+    AwardNotificationConfig.Event.VOTE_INVITE,
+}
+CLOSE_OFFSET_EVENTS = {
+    AwardNotificationConfig.Event.VOTING_CLOSING_REMINDER,
+}
 
 
 class AwardCriterionInline(admin.TabularInline):
@@ -24,9 +33,44 @@ class NomineeInline(admin.TabularInline):
     autocomplete_fields = ('org_person',)
 
 
+class AwardNotificationConfigForm(forms.ModelForm):
+    class Meta:
+        model = AwardNotificationConfig
+        fields = '__all__'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        open_field = self.fields.get('offset_minutes_before_open')
+        close_field = self.fields.get('offset_minutes_before_close')
+        if open_field:
+            open_field.label = 'Minutes before voting opens'
+            open_field.help_text = (
+                'Used for eligibility notice and vote invite only.'
+            )
+        if close_field:
+            close_field.label = 'Minutes before voting closes'
+            close_field.help_text = (
+                'Used for the closing reminder only (unsubmitted ballots).'
+            )
+
+
 class AwardNotificationConfigInline(admin.StackedInline):
     model = AwardNotificationConfig
+    form = AwardNotificationConfigForm
     extra = 0
+    fields = (
+        'event',
+        'enabled',
+        'channel',
+        'audience',
+        'offset_minutes_before_open',
+        'offset_minutes_before_close',
+        'subject_template',
+        'extra',
+    )
+
+    class Media:
+        js = ('awards/admin/notification_offsets.js',)
 
 
 @admin.register(AwardYear)
@@ -71,6 +115,9 @@ class AwardYearAdmin(admin.ModelAdmin):
     inlines = [AwardNotificationConfigInline]
     actions = ('rotate_results_preview_token',)
 
+    class Media:
+        js = ('awards/admin/notification_offsets.js',)
+
     @admin.display(description='Committee preview URL')
     def committee_results_preview_link(self, obj: AwardYear):
         if not obj.pk:
@@ -107,14 +154,14 @@ class AwardYearAdmin(admin.ModelAdmin):
 
 @admin.register(AwardNotificationConfig)
 class AwardNotificationConfigAdmin(admin.ModelAdmin):
+    form = AwardNotificationConfigForm
     list_display = (
         'year',
         'event',
         'enabled',
         'channel',
         'audience',
-        'offset_minutes_before_open',
-        'offset_minutes_before_close',
+        'timing_offset',
     )
     list_filter = ('event', 'enabled', 'audience', 'channel')
     fields = (
@@ -128,6 +175,17 @@ class AwardNotificationConfigAdmin(admin.ModelAdmin):
         'subject_template',
         'extra',
     )
+
+    class Media:
+        js = ('awards/admin/notification_offsets.js',)
+
+    @admin.display(description='Timing offset')
+    def timing_offset(self, obj: AwardNotificationConfig):
+        if obj.event in CLOSE_OFFSET_EVENTS:
+            return f'{obj.offset_minutes_before_close} min before close'
+        if obj.event in OPEN_OFFSET_EVENTS:
+            return f'{obj.offset_minutes_before_open} min before open'
+        return '—'
 
 
 @admin.register(Award)

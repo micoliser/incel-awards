@@ -6,10 +6,10 @@ import logging
 from typing import Any, Optional
 
 from django.utils import timezone
-from django.utils.formats import date_format
 
 from awards.models import AwardNotificationConfig, AwardYear
 from emails.config import EmailConfig
+from emails.formatting import format_email_datetime
 from emails.services.base import BaseEmailService
 from emails.services.vote_invite_emails import ballot_vote_url, frontend_base_url
 from voting.models import BallotToken
@@ -19,13 +19,6 @@ logger = logging.getLogger(__name__)
 
 VOTING_CLOSING_REMINDER_TEMPLATE = 'emails/voting_closing_reminder.html'
 EVENT = AwardNotificationConfig.Event.VOTING_CLOSING_REMINDER
-
-
-def _format_dt(value) -> str:
-    if value is None:
-        return 'TBD'
-    local = timezone.localtime(value) if timezone.is_aware(value) else value
-    return date_format(local, 'DATETIME_FORMAT')
 
 
 def minutes_until_close(year: AwardYear, *, now=None) -> int | None:
@@ -54,7 +47,7 @@ def build_voting_closing_reminder_context(
         'year': year.year,
         'year_title': year.title,
         'voting_closes_at': year.voting_closes_at,
-        'voting_closes_formatted': _format_dt(year.voting_closes_at),
+        'voting_closes_formatted': format_email_datetime(year.voting_closes_at),
         'minutes_remaining': mins,
         'minutes_remaining_label': (
             f'{mins} minute{"s" if mins != 1 else ""}'

@@ -98,17 +98,12 @@ class AwardNotificationConfig(models.Model):
     )
     offset_minutes_before_open = models.PositiveIntegerField(
         default=60,
-        help_text=(
-            'For eligibility_notice / vote_invite: send this many minutes before '
-            'voting_opens_at. Example: 10 = ten minutes before voting begins.'
-        ),
+        help_text='Minutes before voting_opens_at (eligibility notice / vote invite).',
     )
     offset_minutes_before_close = models.PositiveIntegerField(
         default=60,
         help_text=(
-            'For voting_closing_reminder: send this many minutes before '
-            'voting_closes_at. Example: 60 = one hour before voting ends. '
-            'Only unsubmitted ballots receive the reminder.'
+            'Minutes before voting_closes_at (closing reminder; unsubmitted only).'
         ),
     )
     subject_template = models.CharField(
