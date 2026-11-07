@@ -64,6 +64,10 @@ class AwardNotificationConfig(models.Model):
     class Event(models.TextChoices):
         ELIGIBILITY_NOTICE = 'eligibility_notice', 'Eligibility notice'
         VOTE_INVITE = 'vote_invite', 'Vote invite'
+        VOTING_CLOSING_REMINDER = (
+            'voting_closing_reminder',
+            'Voting closing reminder',
+        )
 
     class Channel(models.TextChoices):
         EMAIL = 'email', 'Email'
@@ -95,8 +99,16 @@ class AwardNotificationConfig(models.Model):
     offset_minutes_before_open = models.PositiveIntegerField(
         default=60,
         help_text=(
-            'Send this email this many minutes before voting_opens_at. '
-            'Example: 10 = ten minutes before voting begins.'
+            'For eligibility_notice / vote_invite: send this many minutes before '
+            'voting_opens_at. Example: 10 = ten minutes before voting begins.'
+        ),
+    )
+    offset_minutes_before_close = models.PositiveIntegerField(
+        default=60,
+        help_text=(
+            'For voting_closing_reminder: send this many minutes before '
+            'voting_closes_at. Example: 60 = one hour before voting ends. '
+            'Only unsubmitted ballots receive the reminder.'
         ),
     )
     subject_template = models.CharField(

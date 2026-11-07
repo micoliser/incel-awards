@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
+import { VotingOpenModal } from "@/components/voting-open-modal";
 import { getYear, listYears } from "@/lib/api";
 
 /** Year chrome depends on route params + year meta; allow blocking navigation. */
@@ -31,6 +32,12 @@ export default async function YearLayout({ children, params }: YearLayoutProps) 
     <>
       <SiteHeader
         year={year}
+        votingOpensAt={yearMeta.voting_opens_at}
+        votingClosesAt={yearMeta.voting_closes_at}
+      />
+      <VotingOpenModal
+        year={year}
+        status={yearMeta.status}
         votingOpensAt={yearMeta.voting_opens_at}
         votingClosesAt={yearMeta.voting_closes_at}
       />

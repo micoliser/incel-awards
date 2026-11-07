@@ -18,6 +18,18 @@ from emails.services.eligibility_notice_emails import (
 from emails.services.eligibility_notice_emails import send_eligibility_notice_email
 from emails.services.vote_invite_emails import EVENT as VOTE_INVITE_EVENT
 from emails.services.vote_invite_emails import send_vote_invite_email
+from emails.services.voting_closing_reminder_emails import (
+    EVENT as VOTING_CLOSING_REMINDER_EVENT,
+)
+from emails.services.voting_closing_reminder_emails import (
+    send_voting_closing_reminder_email,
+)
+from emails.services.voting_window_emails import (
+    VOTING_CLOSED_EVENT,
+    VOTING_OPENED_EVENT,
+    send_voting_closed_email,
+    send_voting_opened_email,
+)
 from people.models import OrgPerson
 from voting.models import BallotInviteDelivery, BallotToken
 
@@ -80,6 +92,16 @@ def earliest_send_at(
         return None
     return year.voting_opens_at - timedelta(
         minutes=config.offset_minutes_before_open
+    )
+
+
+def earliest_close_reminder_at(
+    year: AwardYear, config: AwardNotificationConfig
+):
+    if year.voting_closes_at is None:
+        return None
+    return year.voting_closes_at - timedelta(
+        minutes=config.offset_minutes_before_close
     )
 
 
@@ -241,3 +263,196 @@ def dispatch_eligibility_notices(
         send_fn=send_eligibility_notice_email,
         force=force,
     )
+
+
+def dispatch_status_event(
+    year: AwardYear | int,
+    *,
+    event: str,
+    send_fn: SendFn,
+) -> DispatchStats:
+    """
+    Send a status-driven email to all eligible ballot tokens.
+
+    Used for voting_opened / voting_closed (no AwardNotificationConfig / timing gate).
+    Idempotent via BallotInviteDelivery.
+    """
+    from awards.models import AwardNotificationConfig
+
+    stats = DispatchStats(event=event)
+    if isinstance(year, int):
+        year = AwardYear.objects.get(year=year)
+
+    audience = AwardNotificationConfig.Audience.ALL_ELIGIBLE
+    tokens = list(tokens_for_audience(year, audience))
+    stats.audience_total = len(tokens)
+
+    if not EmailConfig.is_enabled():
+        stats.exited_early = 'email_disabled'
+        stats.skipped_email_off = len(tokens)
+        logger.info(
+            'EMAIL_ENABLED=False — would dispatch %s %s emails for %s',
+            len(tokens),
+            event,
+            year.year,
+        )
+        return stats
+
+    already_sent = set(
+        BallotInviteDelivery.objects.filter(
+            token__year=year,
+            event=event,
+            status=BallotInviteDelivery.Status.SENT,
+        ).values_list('token_id', flat=True)
+    )
+
+    for token in tokens:
+        if token.pk in already_sent:
+            stats.skipped_already_sent += 1
+            continue
+        if token.is_revoked:
+            stats.skipped_revoked += 1
+            continue
+
+        ok = send_fn(token, is_async=False)
+        if ok:
+            _record_delivery(
+                token,
+                event=event,
+                status=BallotInviteDelivery.Status.SENT,
+            )
+            stats.sent += 1
+        else:
+            _record_delivery(
+                token,
+                event=event,
+                status=BallotInviteDelivery.Status.FAILED,
+                error_message=f'{send_fn.__name__} returned False',
+            )
+            stats.failed += 1
+
+    return stats
+
+
+def dispatch_voting_opened(year: AwardYear | int) -> DispatchStats:
+    return dispatch_status_event(
+        year,
+        event=VOTING_OPENED_EVENT,
+        send_fn=send_voting_opened_email,
+    )
+
+
+def dispatch_voting_closed(year: AwardYear | int) -> DispatchStats:
+    return dispatch_status_event(
+        year,
+        event=VOTING_CLOSED_EVENT,
+        send_fn=send_voting_closed_email,
+    )
+
+
+def dispatch_voting_closing_reminders(
+    year: AwardYear | int,
+    *,
+    force: bool = False,
+) -> DispatchStats:
+    """
+    Remind eligible voters who have not submitted yet.
+
+    Timing gate: now >= voting_closes_at - offset_minutes_before_close
+    and now < voting_closes_at (unless force=True).
+    """
+    stats = DispatchStats(event=VOTING_CLOSING_REMINDER_EVENT)
+
+    if isinstance(year, int):
+        year = AwardYear.objects.get(year=year)
+
+    config = AwardNotificationConfig.objects.filter(
+        year=year,
+        event=VOTING_CLOSING_REMINDER_EVENT,
+    ).first()
+
+    if config is None:
+        stats.exited_early = 'no_config'
+        logger.info(
+            'No voting_closing_reminder AwardNotificationConfig for year %s',
+            year.year,
+        )
+        return stats
+
+    if not config.enabled:
+        stats.exited_early = 'disabled'
+        stats.skipped_disabled = 1
+        return stats
+
+    if not force:
+        gate = earliest_close_reminder_at(year, config)
+        if gate is None:
+            stats.exited_early = 'no_voting_closes_at'
+            return stats
+        now = timezone.now()
+        if now < gate:
+            stats.exited_early = 'too_early'
+            stats.skipped_timing = 1
+            return stats
+        if year.voting_closes_at is not None and now >= year.voting_closes_at:
+            stats.exited_early = 'already_closed'
+            stats.skipped_timing = 1
+            return stats
+
+    if not EmailConfig.is_enabled():
+        tokens = list(
+            tokens_for_audience(year, config.audience).filter(
+                submitted_at__isnull=True
+            )
+        )
+        stats.audience_total = len(tokens)
+        stats.exited_early = 'email_disabled'
+        stats.skipped_email_off = len(tokens)
+        logger.info(
+            'EMAIL_ENABLED=False — would dispatch %s closing reminders for %s',
+            len(tokens),
+            year.year,
+        )
+        return stats
+
+    tokens = list(
+        tokens_for_audience(year, config.audience).filter(submitted_at__isnull=True)
+    )
+    stats.audience_total = len(tokens)
+
+    already_sent = set(
+        BallotInviteDelivery.objects.filter(
+            token__year=year,
+            event=VOTING_CLOSING_REMINDER_EVENT,
+            status=BallotInviteDelivery.Status.SENT,
+        ).values_list('token_id', flat=True)
+    )
+
+    for token in tokens:
+        if token.pk in already_sent:
+            stats.skipped_already_sent += 1
+            continue
+        if token.is_revoked:
+            stats.skipped_revoked += 1
+            continue
+
+        ok = send_voting_closing_reminder_email(
+            token, config=config, is_async=False
+        )
+        if ok:
+            _record_delivery(
+                token,
+                event=VOTING_CLOSING_REMINDER_EVENT,
+                status=BallotInviteDelivery.Status.SENT,
+            )
+            stats.sent += 1
+        else:
+            _record_delivery(
+                token,
+                event=VOTING_CLOSING_REMINDER_EVENT,
+                status=BallotInviteDelivery.Status.FAILED,
+                error_message='send_voting_closing_reminder_email returned False',
+            )
+            stats.failed += 1
+
+    return stats

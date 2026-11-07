@@ -39,7 +39,15 @@ Every tick (idempotent):
 2. **Generate** missing ballot tokens for active years
 3. **Dispatch eligibility notices** when `now >= voting_opens_at - offset` (categories only; no nominees)
 4. **Dispatch vote invites** when `now >= voting_opens_at - offset` (personal ballot links)
-5. **Advance status** `scheduled → voting` at open, `voting → closed` at close
+5. **Dispatch closing reminders** when
+   `now >= voting_closes_at - offset_minutes_before_close` (unsubmitted only;
+   configure in admin on **voting_closing_reminder**)
+6. **Advance status** `scheduled → voting` at open, `voting → closed` at close
+7. **Email on status flip**: `voting_opened` (with ballot link) and `voting_closed`
+
+After a voter submits a complete ballot, the API also sends a **vote confirmation**
+email (no individual choices listed). That delivery is recorded as event
+`vote_confirmation` on `BallotInviteDelivery`.
 
 Offsets are per notification config in admin (defaults: eligibility **10 minutes**, vote invite **60 minutes**).
 
@@ -121,6 +129,31 @@ See `api/.env.example` for the full production variable checklist.
 3. Set open/close in admin; Celery handles sync, tokens, and emails.
 
 Keep prior years `archived` after results; do not reuse ballot tokens across years.
+
+## Reset a year for another live test
+
+Invite emails are idempotent: once a `BallotInviteDelivery` is `sent`, changing
+`voting_opens_at` alone will **not** send again. For production dry-runs, wipe
+voting/email state (keeps awards, nominees, org people):
+
+```bash
+python manage.py reset_season_for_testing --year 2026 --confirm \
+  --opens-in-minutes 15 --window-minutes 30 \
+  --eligibility-offset 10 --invite-offset 5 \
+  --rotate-preview-token
+```
+
+On CapRover:
+
+```bash
+docker exec -it srv-captain--incel-awards-api \
+  python manage.py reset_season_for_testing --year 2026 --confirm \
+  --opens-in-minutes 15 --window-minutes 30 \
+  --eligibility-offset 10 --invite-offset 5 \
+  --rotate-preview-token
+```
+
+Then wait for Celery beat — do not force-dispatch unless debugging.
 
 ## Useful checks
 

@@ -114,8 +114,20 @@ class AwardNotificationConfigAdmin(admin.ModelAdmin):
         'channel',
         'audience',
         'offset_minutes_before_open',
+        'offset_minutes_before_close',
     )
     list_filter = ('event', 'enabled', 'audience', 'channel')
+    fields = (
+        'year',
+        'event',
+        'enabled',
+        'channel',
+        'audience',
+        'offset_minutes_before_open',
+        'offset_minutes_before_close',
+        'subject_template',
+        'extra',
+    )
 
 
 @admin.register(Award)

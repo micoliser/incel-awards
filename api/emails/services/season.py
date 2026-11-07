@@ -18,6 +18,9 @@ from awards.models import AwardYear
 from emails.services.dispatch import (
     dispatch_eligibility_notices,
     dispatch_vote_invites,
+    dispatch_voting_closed,
+    dispatch_voting_closing_reminders,
+    dispatch_voting_opened,
 )
 from people.services.org_client import OrgUsersAPIError
 from people.services.sync import SyncStats, sync_org_people
@@ -33,7 +36,10 @@ class SeasonTickStats:
     tokens: list[dict] = field(default_factory=list)
     eligibility_notices: list[dict] = field(default_factory=list)
     invites: list[dict] = field(default_factory=list)
+    closing_reminders: list[dict] = field(default_factory=list)
     status_changes: list[str] = field(default_factory=list)
+    voting_opened: list[dict] = field(default_factory=list)
+    voting_closed: list[dict] = field(default_factory=list)
 
 
 def _years_for_token_gen():
@@ -115,10 +121,36 @@ def dispatch_invites_for_active_years(*, force: bool = False) -> list[tuple[int,
     return results
 
 
-def advance_year_statuses() -> list[str]:
+def dispatch_closing_reminders_for_active_years(
+    *, force: bool = False
+) -> list[tuple[int, dict]]:
+    results = []
+    for year in _years_for_notifications():
+        stats = dispatch_voting_closing_reminders(year, force=force)
+        results.append((year.year, asdict(stats)))
+        logger.info(
+            'dispatch closing reminders year=%s sent=%s failed=%s '
+            'skipped_already=%s exited=%s',
+            year.year,
+            stats.sent,
+            stats.failed,
+            stats.skipped_already_sent,
+            stats.exited_early,
+        )
+    return results
+
+
+@dataclass
+class StatusAdvanceResult:
+    changes: list[str] = field(default_factory=list)
+    opened_years: list[AwardYear] = field(default_factory=list)
+    closed_years: list[AwardYear] = field(default_factory=list)
+
+
+def advance_year_statuses() -> StatusAdvanceResult:
     """Flip scheduled→voting and voting→closed from voting window timestamps."""
     now = timezone.now()
-    changes: list[str] = []
+    result = StatusAdvanceResult()
 
     for year in AwardYear.objects.filter(status=AwardYear.Status.SCHEDULED):
         opens = year.voting_opens_at
@@ -126,21 +158,27 @@ def advance_year_statuses() -> list[str]:
             closes = year.voting_closes_at
             if closes is not None and now >= closes:
                 year.status = AwardYear.Status.CLOSED
+                year.save(update_fields=['status'])
+                result.changes.append(f'{year.year}:closed')
+                result.closed_years.append(year)
+                logger.info('AwardYear %s status → closed', year.year)
             else:
                 year.status = AwardYear.Status.VOTING
-            year.save(update_fields=['status'])
-            changes.append(f'{year.year}:{year.status}')
-            logger.info('AwardYear %s status → %s', year.year, year.status)
+                year.save(update_fields=['status'])
+                result.changes.append(f'{year.year}:voting')
+                result.opened_years.append(year)
+                logger.info('AwardYear %s status → voting', year.year)
 
     for year in AwardYear.objects.filter(status=AwardYear.Status.VOTING):
         closes = year.voting_closes_at
         if closes is not None and now >= closes:
             year.status = AwardYear.Status.CLOSED
             year.save(update_fields=['status'])
-            changes.append(f'{year.year}:closed')
+            result.changes.append(f'{year.year}:closed')
+            result.closed_years.append(year)
             logger.info('AwardYear %s status → closed', year.year)
 
-    return changes
+    return result
 
 
 def run_season_tick(*, force_invites: bool = False) -> SeasonTickStats:
@@ -150,7 +188,9 @@ def run_season_tick(*, force_invites: bool = False) -> SeasonTickStats:
     2. Generate missing ballot tokens
     3. Dispatch due eligibility notices (categories only)
     4. Dispatch due vote invites (ballot links)
-    5. Advance year status from open/close timestamps
+    5. Dispatch closing reminders (unsubmitted ballots only)
+    6. Advance year status from open/close timestamps
+    7. Email eligible voters when voting opens or closes
     """
     out = SeasonTickStats()
 
@@ -185,5 +225,34 @@ def run_season_tick(*, force_invites: bool = False) -> SeasonTickStats:
     for year_num, stats in dispatch_invites_for_active_years(force=force_invites):
         out.invites.append({'year': year_num, **stats})
 
-    out.status_changes = advance_year_statuses()
+    for year_num, stats in dispatch_closing_reminders_for_active_years(
+        force=force_invites
+    ):
+        out.closing_reminders.append({'year': year_num, **stats})
+
+    status_result = advance_year_statuses()
+    out.status_changes = status_result.changes
+
+    for year in status_result.opened_years:
+        stats = dispatch_voting_opened(year)
+        out.voting_opened.append({'year': year.year, **asdict(stats)})
+        logger.info(
+            'voting_opened year=%s sent=%s failed=%s skipped_already=%s',
+            year.year,
+            stats.sent,
+            stats.failed,
+            stats.skipped_already_sent,
+        )
+
+    for year in status_result.closed_years:
+        stats = dispatch_voting_closed(year)
+        out.voting_closed.append({'year': year.year, **asdict(stats)})
+        logger.info(
+            'voting_closed year=%s sent=%s failed=%s skipped_already=%s',
+            year.year,
+            stats.sent,
+            stats.failed,
+            stats.skipped_already_sent,
+        )
+
     return out

@@ -132,8 +132,9 @@ DB_PORT=5432
 FRONTEND_BASE_URL=https://awards.incelgroup.com
 CORS_ALLOWED_ORIGINS=https://awards.incelgroup.com
 
-ORG_USERS_API_BASE_URL=https://workspace.incelgroup.com
-ORG_USERS_API_TOKEN=<incel_live_… production bearer token>
+# Origin of the portal API (not the workspace frontend).
+ORG_USERS_API_BASE_URL=https://workspaceapi.incelgroup.com
+ORG_USERS_API_TOKEN=<full raw incel_live_… key shown once at creation>
 ORG_USERS_API_AUTH_SCHEME=Bearer
 DEV_ORG_USERS_ENABLED=False
 
@@ -234,6 +235,23 @@ Watch **celery-worker** logs for invite / eligibility console/SMTP sends.
 
 6. When invites go out, open a ballot link from the email and vote end-to-end.
 
+### Re-running a live test (wipe slate)
+
+Changing only the voting window does **not** resend emails — successful
+`BallotInviteDelivery` rows block re-send. After deploying a build that includes
+`reset_season_for_testing`:
+
+```bash
+docker exec -it srv-captain--incel-awards-api \
+  python manage.py reset_season_for_testing --year 2026 --confirm \
+  --opens-in-minutes 15 --window-minutes 30 \
+  --eligibility-offset 10 --invite-offset 5 \
+  --rotate-preview-token
+```
+
+That clears votes, audit logs, invite deliveries, unlocks ballots, unpublishes
+results, and schedules a fresh window. Awards / nominees / org people are kept.
+
 ---
 
 ## 7. Ongoing deploys
@@ -272,7 +290,7 @@ Manual rebuild only (no CapRover) or custom API URL:
 | Frontend calls localhost API | Rebuild frontend image with correct `NEXT_PUBLIC_API_BASE_URL` |
 | No emails | `EMAIL_ENABLED=True`, SMTP vars set, **worker + beat** both running |
 | Season tick never fires | Beat app must run `celery -A config beat`; Redis URL reachable |
-| Org sync 401 | Bearer token + `ORG_USERS_API_BASE_URL=https://workspace.incelgroup.com` (origin only) |
+| Org sync 401/404 | Use `ORG_USERS_API_BASE_URL=https://workspaceapi.incelgroup.com` (not `workspace.…`) + full raw Bearer key; set these in CapRover App Configs (not only local `.env.production`) |
 | DB connection refused | `DB_HOST=srv-captain--<exact-postgres-app-name>` |
 
 ---

@@ -472,6 +472,22 @@ def seed_year_2026(awards: list[dict] | None = None) -> AwardYear:
         },
     )
 
+    AwardNotificationConfig.objects.update_or_create(
+        year=year,
+        event=AwardNotificationConfig.Event.VOTING_CLOSING_REMINDER,
+        defaults={
+            'enabled': True,
+            'channel': AwardNotificationConfig.Channel.EMAIL,
+            'audience': AwardNotificationConfig.Audience.ALL_ELIGIBLE,
+            'offset_minutes_before_open': 0,
+            'offset_minutes_before_close': 60,
+            'subject_template': (
+                'Reminder: voting closes soon — Incel Employee Awards {year}'
+            ),
+            'extra': {},
+        },
+    )
+
     for spec in catalogue:
         award, _ = Award.objects.update_or_create(
             year=year,

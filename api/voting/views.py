@@ -1,5 +1,6 @@
 import secrets
 
+from django.db import transaction
 from django.db.models import Prefetch, Q
 from rest_framework import status
 from rest_framework.exceptions import AuthenticationFailed, NotFound, PermissionDenied
@@ -9,6 +10,7 @@ from rest_framework.views import APIView
 
 from awards.models import Award, AwardYear, Nominee
 from awards.serializers import voting_window_status
+from emails.services.vote_confirmation_emails import queue_vote_confirmation_email
 from people.models import OrgPerson
 from voting.authentication import authenticate_ballot, get_year_or_404
 from voting.serializers import (
@@ -121,7 +123,7 @@ class BallotVotesView(APIView):
         serializer.is_valid(raise_exception=True)
 
         try:
-            upsert_votes(
+            result = upsert_votes(
                 year=award_year,
                 voter=person,
                 items=serializer.validated_data['votes'],
@@ -138,6 +140,12 @@ class BallotVotesView(APIView):
                 {'detail': exc.message, 'code': exc.code},
                 status=http_status,
             )
+
+        award_count = len(result.votes)
+        token_id = ballot_token.pk
+        transaction.on_commit(
+            lambda: queue_vote_confirmation_email(token_id, award_count)
+        )
 
         ballot_token.refresh_from_db()
         return Response(_ballot_payload(award_year, person, ballot_token))
