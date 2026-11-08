@@ -14,6 +14,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from awards.models import Award, AwardNotificationConfig, AwardYear
+from awards.notification_defaults import ensure_default_notification_configs
 from voting.models import BallotInviteDelivery, BallotToken, Vote, VoteAuditLog
 
 
@@ -106,6 +107,9 @@ def reset_season_for_testing(
     stats.voting_closes_at = (
         year.voting_closes_at.isoformat() if year.voting_closes_at else None
     )
+
+    # Make sure all five season-email rows exist before applying offsets.
+    ensure_default_notification_configs(year)
 
     if eligibility_offset_minutes is not None:
         AwardNotificationConfig.objects.filter(

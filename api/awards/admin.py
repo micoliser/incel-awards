@@ -10,6 +10,7 @@ from awards.models import (
     AwardYear,
     Nominee,
 )
+from awards.notification_defaults import ensure_default_notification_configs
 
 
 class AwardCriterionInline(admin.TabularInline):
@@ -172,6 +173,15 @@ class AwardYearAdmin(admin.ModelAdmin):
 
     class Media:
         js = ('awards/admin/notification_offsets.js',)
+
+    def changeform_view(self, request, object_id=None, form_url='', extra_context=None):
+        if object_id:
+            year = AwardYear.objects.filter(pk=object_id).first()
+            if year is not None:
+                ensure_default_notification_configs(year)
+        return super().changeform_view(
+            request, object_id, form_url, extra_context
+        )
 
     @admin.display(description='Committee preview URL')
     def committee_results_preview_link(self, obj: AwardYear):
