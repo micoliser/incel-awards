@@ -17,7 +17,8 @@ Copy `api/.env.example` → `api/.env`. Critical keys:
 | `DEV_ORG_USERS_ENABLED` | Local fake directory at the same `/api/v1/external/users` path |
 | `EMAIL_*` / `EMAIL_ENABLED` / `EMAIL_DEBUG` | Console locally; SMTP in production |
 | `CELERY_BROKER_URL` / `CELERY_RESULT_BACKEND` | Redis for Celery worker + beat |
-| `SEASON_TICK_SECONDS` | How often beat runs automation (default 60 local / 300 prod) |
+| `SEASON_TICK_SECONDS` | Mail/status beat interval (default 60; no workspace API) |
+| `ORG_SYNC_SECONDS` | Workspace org-sync beat interval (default 3600) |
 | `BALLOT_THROTTLE_*` | Ballot API rate limits |
 
 ## Processes to run
@@ -26,24 +27,27 @@ Copy `api/.env.example` → `api/.env`. Critical keys:
 |---|---|---|
 | API | `python manage.py runserver 8000` | Admin, ballot API, local fake org users |
 | Celery worker | `celery -A config worker -l info` | Runs sync / tokens / invites (emails print here locally) |
-| Celery beat | `celery -A config beat -l info` | Schedules `season_tick` every `SEASON_TICK_SECONDS` |
+| Celery beat | `celery -A config beat -l info` | Schedules mail tick + org sync on separate intervals |
 | Frontend | `npm run dev` or `npm start` in `frontend/` | Public site + ballot UI |
 
 Redis must be running (`redis-cli ping` → `PONG`).
 
-## What `season_tick` does automatically
+## Beat jobs (split)
 
-Every tick (idempotent):
+| Task | Env | What it does |
+|---|---|---|
+| `emails.season_tick` | `SEASON_TICK_SECONDS` (default 60) | Tokens from DB, due emails, open/close status — **no** workspace API |
+| `emails.org_sync_tick` | `ORG_SYNC_SECONDS` (default 3600) | Sync people from `ORG_USERS_API_*`, then mint tokens for new people |
 
-1. **Sync** people from `ORG_USERS_API_*`
-2. **Generate** missing ballot tokens for active years
-3. **Dispatch eligibility notices** when `now >= voting_opens_at - offset` (categories only; no nominees)
-4. **Dispatch vote invites** when `now >= voting_opens_at - offset` (personal ballot links)
-5. **Dispatch closing reminders** when
-   `now >= voting_closes_at - offset_minutes_before_close` (unsubmitted only;
-   configure in admin on **voting_closing_reminder**)
-6. **Advance status** `scheduled → voting` at open, `voting → closed` at close
-7. **Email on status flip**: `voting_opened` (with ballot link) and `voting_closed`
+Mail tick (idempotent):
+
+1. **Generate** missing ballot tokens for active years
+2. **Dispatch eligibility notices** when `now >= voting_opens_at - offset`
+3. **Dispatch vote invites** when `now >= voting_opens_at - offset`
+4. **Dispatch closing reminders** when
+   `now >= voting_closes_at - offset_minutes_before_close` (unsubmitted only)
+5. **Advance status** `scheduled → voting` at open, `voting → closed` at close
+6. **Email on status flip**: `voting_opened` / `voting_closed`
 
 After a voter submits a complete ballot, the API also sends a **vote confirmation**
 email (no individual choices listed). That delivery is recorded as event
@@ -53,10 +57,12 @@ Offsets are per notification config in admin (defaults: eligibility **10 minutes
 
 You do **not** manually sync, mint tokens, or send emails for a normal season.
 
-Manual one-shot (same logic as beat):
+Manual one-shots:
 
 ```bash
-python manage.py run_season_tick
+python manage.py run_season_tick              # sync + mail (full)
+python manage.py run_season_tick --mail-only  # same as frequent beat job
+python manage.py run_season_tick --sync-only  # same as hourly org sync
 ```
 
 ## Local end-to-end test (admin-driven)

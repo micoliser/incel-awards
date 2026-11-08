@@ -6,9 +6,14 @@ from django.utils import timezone
 
 from awards.models import AwardNotificationConfig, AwardYear
 from awards.seed import seed_year_2026
-from emails.services.season import run_season_tick
+from emails.services.season import (
+    run_org_sync_tick,
+    run_season_mail_tick,
+    run_season_tick,
+)
 from people.dev_fixtures import build_dev_org_users
 from people.models import OrgPerson
+from people.services.sync import sync_org_people as real_sync
 from voting.models import BallotToken
 
 
@@ -30,13 +35,8 @@ class SeasonTickTests(TestCase):
         config.save()
 
     @patch('emails.services.season.sync_org_people')
-    def test_tick_syncs_tokens_and_dispatches(self, mock_sync):
-        from people.services.sync import SyncStats, sync_org_people as real_sync
-
-        def _sync():
-            return real_sync(build_dev_org_users())
-
-        mock_sync.side_effect = _sync
+    def test_full_tick_syncs_tokens_and_dispatches(self, mock_sync):
+        mock_sync.side_effect = lambda: real_sync(build_dev_org_users())
 
         stats = run_season_tick()
         self.assertIsNotNone(stats.sync)
@@ -45,14 +45,34 @@ class SeasonTickTests(TestCase):
         self.assertTrue(any(i.get('sent', 0) > 0 for i in stats.invites))
 
     @patch('emails.services.season.sync_org_people')
-    def test_tick_advances_status_when_open(self, mock_sync):
-        from people.services.sync import sync_org_people as real_sync
+    def test_mail_tick_does_not_call_workspace_api(self, mock_sync):
+        real_sync(build_dev_org_users())
+        mock_sync.reset_mock()
 
+        stats = run_season_mail_tick()
+        mock_sync.assert_not_called()
+        self.assertIsNone(stats.sync)
+        self.assertGreater(BallotToken.objects.filter(year=self.year).count(), 0)
+        self.assertTrue(any(i.get('sent', 0) > 0 for i in stats.invites))
+
+    @patch('emails.services.season.sync_org_people')
+    def test_org_sync_tick_does_not_send_invites(self, mock_sync):
         mock_sync.side_effect = lambda: real_sync(build_dev_org_users())
+
+        stats = run_org_sync_tick()
+        self.assertIsNotNone(stats.sync)
+        self.assertGreater(BallotToken.objects.filter(year=self.year).count(), 0)
+        self.assertFalse(hasattr(stats, 'invites'))
+
+    @patch('emails.services.season.sync_org_people')
+    def test_mail_tick_advances_status_when_open(self, mock_sync):
+        real_sync(build_dev_org_users())
+        mock_sync.reset_mock()
         self.year.voting_opens_at = timezone.now() - timedelta(minutes=1)
         self.year.save(update_fields=['voting_opens_at'])
 
-        stats = run_season_tick()
+        stats = run_season_mail_tick()
+        mock_sync.assert_not_called()
         self.year.refresh_from_db()
         self.assertEqual(self.year.status, AwardYear.Status.VOTING)
         self.assertTrue(any('voting' in c for c in stats.status_changes))

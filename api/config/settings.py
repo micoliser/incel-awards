@@ -153,7 +153,7 @@ DEV_ORG_USERS_ENABLED = os.getenv(
 ).lower() in ('true', '1', 'yes')
 
 # ------------------------------------------------------------------------------
-# CELERY (season tick: sync → tokens → invites → status)
+# CELERY — split schedules: org sync (workspace API) vs mail/status (no API)
 # ------------------------------------------------------------------------------
 CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://127.0.0.1:6379/0')
 CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', CELERY_BROKER_URL)
@@ -168,13 +168,20 @@ CELERY_TASK_ALWAYS_EAGER = os.getenv(
 ).lower() in ('true', '1', 'yes')
 CELERY_TASK_EAGER_PROPAGATES = True
 
-# How often beat runs season automation (seconds). Local default 60; prod can be 300+.
-_season_tick_seconds = int(os.getenv('SEASON_TICK_SECONDS', '60' if DEBUG else '300'))
+# Mail/status tick (tokens, due emails, open/close). Safe to run often.
+_season_tick_seconds = int(os.getenv('SEASON_TICK_SECONDS', '60'))
+# Workspace org sync. Keep high in production to avoid hammering the API.
+_org_sync_seconds = int(os.getenv('ORG_SYNC_SECONDS', '3600'))
 CELERY_BEAT_SCHEDULE = {
     'season-tick': {
         'task': 'emails.season_tick',
         'schedule': float(max(15, _season_tick_seconds)),
         'options': {'expires': float(max(15, _season_tick_seconds))},
+    },
+    'org-sync-tick': {
+        'task': 'emails.org_sync_tick',
+        'schedule': float(max(60, _org_sync_seconds)),
+        'options': {'expires': float(max(60, _org_sync_seconds))},
     },
 }
 

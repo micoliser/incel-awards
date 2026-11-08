@@ -1,8 +1,10 @@
 """
-Season automation: sync roster → ballot tokens → emails → status ticks.
+Season automation, split for Celery beat:
 
-Used by Celery beat (and optionally management commands). Safe to run frequently;
-notification dispatch and token generation are idempotent.
+- Org sync (workspace API) — infrequent
+- Mail/status tick — frequent; no workspace calls
+
+``run_season_tick`` still runs both for one-shot ops / management commands.
 """
 
 from __future__ import annotations
@@ -40,6 +42,13 @@ class SeasonTickStats:
     status_changes: list[str] = field(default_factory=list)
     voting_opened: list[dict] = field(default_factory=list)
     voting_closed: list[dict] = field(default_factory=list)
+
+
+@dataclass
+class OrgSyncTickStats:
+    sync: dict | None = None
+    sync_error: str = ''
+    tokens: list[dict] = field(default_factory=list)
 
 
 def _years_for_token_gen():
@@ -181,19 +190,17 @@ def advance_year_statuses() -> StatusAdvanceResult:
     return result
 
 
-def run_season_tick(*, force_invites: bool = False) -> SeasonTickStats:
-    """
-    Full automation tick:
-    1. Sync org people from ORG_USERS_API_*
-    2. Generate missing ballot tokens
-    3. Dispatch due eligibility notices (categories only)
-    4. Dispatch due vote invites (ballot links)
-    5. Dispatch closing reminders (unsubmitted ballots only)
-    6. Advance year status from open/close timestamps
-    7. Email eligible voters when voting opens or closes
-    """
-    out = SeasonTickStats()
+def _append_token_stats(out_tokens: list[dict]) -> None:
+    for year_num, stats in generate_tokens_for_active_years():
+        out_tokens.append({
+            'year': year_num,
+            'eligible': stats.eligible,
+            'created': stats.created,
+            'skipped_existing': stats.skipped_existing,
+        })
 
+
+def _run_sync_into(out: SeasonTickStats | OrgSyncTickStats) -> None:
     try:
         sync_stats = sync_roster()
         out.sync = asdict(sync_stats)
@@ -207,17 +214,35 @@ def run_season_tick(*, force_invites: bool = False) -> SeasonTickStats:
     except OrgUsersAPIError as exc:
         out.sync_error = str(exc)
         logger.exception('org sync failed: %s', exc)
-    except Exception as exc:  # noqa: BLE001 — tick must continue if sync fails mid-season
+    except Exception as exc:  # noqa: BLE001 — tick must continue if sync fails
         out.sync_error = str(exc)
         logger.exception('org sync failed: %s', exc)
 
-    for year_num, stats in generate_tokens_for_active_years():
-        out.tokens.append({
-            'year': year_num,
-            'eligible': stats.eligible,
-            'created': stats.created,
-            'skipped_existing': stats.skipped_existing,
-        })
+
+def run_org_sync_tick() -> OrgSyncTickStats:
+    """
+    Infrequent beat job: call workspace API, then mint tokens for new people.
+
+    Does not send emails or advance voting status.
+    """
+    out = OrgSyncTickStats()
+    _run_sync_into(out)
+    _append_token_stats(out.tokens)
+    return out
+
+
+def run_season_mail_tick(*, force_invites: bool = False) -> SeasonTickStats:
+    """
+    Frequent beat job (no workspace API):
+
+    1. Generate missing ballot tokens from DB roster
+    2. Dispatch due eligibility / invite / closing-reminder emails
+    3. Advance year status from open/close timestamps
+    4. Email when voting opens or closes
+    """
+    out = SeasonTickStats()
+
+    _append_token_stats(out.tokens)
 
     for year_num, stats in dispatch_eligibility_for_active_years(force=force_invites):
         out.eligibility_notices.append({'year': year_num, **stats})
@@ -255,4 +280,24 @@ def run_season_tick(*, force_invites: bool = False) -> SeasonTickStats:
             stats.skipped_already_sent,
         )
 
+    return out
+
+
+def run_season_tick(*, force_invites: bool = False) -> SeasonTickStats:
+    """
+    One-shot full pipeline (management command / ops):
+
+    org sync → tokens → emails → status (same as both beat jobs back-to-back).
+    """
+    out = SeasonTickStats()
+    _run_sync_into(out)
+
+    mail = run_season_mail_tick(force_invites=force_invites)
+    out.tokens = mail.tokens
+    out.eligibility_notices = mail.eligibility_notices
+    out.invites = mail.invites
+    out.closing_reminders = mail.closing_reminders
+    out.status_changes = mail.status_changes
+    out.voting_opened = mail.voting_opened
+    out.voting_closed = mail.voting_closed
     return out

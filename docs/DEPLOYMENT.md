@@ -153,7 +153,8 @@ EMAIL_DEBUG=False
 CELERY_BROKER_URL=redis://srv-captain--<redis-app>:6379/5
 CELERY_RESULT_BACKEND=redis://srv-captain--<redis-app>:6379/5
 CELERY_TASK_ALWAYS_EAGER=False
-SEASON_TICK_SECONDS=300
+SEASON_TICK_SECONDS=60
+ORG_SYNC_SECONDS=3600
 
 BALLOT_THROTTLE_RESOLVE=60/min
 BALLOT_THROTTLE_VOTE=30/min
@@ -225,13 +226,16 @@ python manage.py createsuperuser
      - **vote_invite** → e.g. `5`–`60` minutes before open
 4. Add awards / nominees in admin  
    (`year_2026.py` seed is gitignored because it contains nominees — do **not** commit it).
-5. Confirm org sync works (Celery tick or one-shot):
+5. Confirm org sync + mail tick (one-shots):
 
 ```bash
-python manage.py run_season_tick
+python manage.py run_season_tick --sync-only
+python manage.py run_season_tick --mail-only
 ```
 
-Watch **celery-worker** logs for invite / eligibility console/SMTP sends.
+Or full pipeline: `python manage.py run_season_tick`.  
+Watch **celery-worker** logs for invite / eligibility SMTP sends. Set CapRover
+`SEASON_TICK_SECONDS=60` and `ORG_SYNC_SECONDS=3600` on api, worker, and beat.
 
 6. When invites go out, open a ballot link from the email and vote end-to-end.
 
@@ -289,7 +293,8 @@ Manual rebuild only (no CapRover) or custom API URL:
 | 502 on API domain | Container port must be **8000**; check migrate/gunicorn logs |
 | Frontend calls localhost API | Rebuild frontend image with correct `NEXT_PUBLIC_API_BASE_URL` |
 | No emails | `EMAIL_ENABLED=True`, SMTP vars set, **worker + beat** both running |
-| Season tick never fires | Beat app must run `celery -A config beat`; Redis URL reachable |
+| Season mail never fires | Beat must schedule `emails.season_tick`; set `SEASON_TICK_SECONDS=60` (not only `ORG_SYNC_SECONDS`) |
+| Org roster stale | Beat must schedule `emails.org_sync_tick`; check `ORG_SYNC_SECONDS` + workspace API token |
 | Org sync 401/404 | Use `ORG_USERS_API_BASE_URL=https://workspaceapi.incelgroup.com` (not `workspace.…`) + full raw Bearer key; set these in CapRover App Configs (not only local `.env.production`) |
 | DB connection refused | `DB_HOST=srv-captain--<exact-postgres-app-name>` |
 
