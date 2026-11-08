@@ -274,7 +274,8 @@ def dispatch_status_event(
     """
     Send a status-driven email to all eligible ballot tokens.
 
-    Used for voting_opened / voting_closed (no AwardNotificationConfig / timing gate).
+    Used for voting_opened / voting_closed (no minute offset).
+    Honours AwardNotificationConfig.enabled / audience / subject when present.
     Idempotent via BallotInviteDelivery.
     """
     from awards.models import AwardNotificationConfig
@@ -283,7 +284,21 @@ def dispatch_status_event(
     if isinstance(year, int):
         year = AwardYear.objects.get(year=year)
 
-    audience = AwardNotificationConfig.Audience.ALL_ELIGIBLE
+    config = AwardNotificationConfig.objects.filter(
+        year=year,
+        event=event,
+    ).first()
+    if config is not None and not config.enabled:
+        stats.exited_early = 'disabled'
+        stats.skipped_disabled = 1
+        logger.info('%s config disabled for year %s — exiting', event, year.year)
+        return stats
+
+    audience = (
+        config.audience
+        if config is not None
+        else AwardNotificationConfig.Audience.ALL_ELIGIBLE
+    )
     tokens = list(tokens_for_audience(year, audience))
     stats.audience_total = len(tokens)
 
@@ -314,7 +329,7 @@ def dispatch_status_event(
             stats.skipped_revoked += 1
             continue
 
-        ok = send_fn(token, is_async=False)
+        ok = send_fn(token, config=config, is_async=False)
         if ok:
             _record_delivery(
                 token,

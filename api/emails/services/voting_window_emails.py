@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any, Optional
 
+from awards.models import AwardNotificationConfig, AwardYear
 from emails.config import EmailConfig
 from emails.formatting import format_email_datetime
 from emails.services.base import BaseEmailService
@@ -16,8 +17,8 @@ logger = logging.getLogger(__name__)
 
 VOTING_OPENED_TEMPLATE = 'emails/voting_opened.html'
 VOTING_CLOSED_TEMPLATE = 'emails/voting_closed.html'
-VOTING_OPENED_EVENT = 'voting_opened'
-VOTING_CLOSED_EVENT = 'voting_closed'
+VOTING_OPENED_EVENT = AwardNotificationConfig.Event.VOTING_OPENED
+VOTING_CLOSED_EVENT = AwardNotificationConfig.Event.VOTING_CLOSED
 
 
 def _base_context(
@@ -51,17 +52,34 @@ def _base_context(
     }
 
 
+def resolve_subject(
+    config: Optional[AwardNotificationConfig],
+    year: AwardYear,
+    *,
+    default: str,
+) -> str:
+    template = (config.subject_template if config else '') or default
+    try:
+        return template.format(year=year.year, title=year.title)
+    except (KeyError, ValueError):
+        return template
+
+
 def send_voting_opened_email(
     token: BallotToken,
     *,
-    config=None,  # unused; keeps dispatch_notification-compatible signature
+    config: Optional[AwardNotificationConfig] = None,
     recipient_override: Optional[str] = None,
     is_async: bool = False,
 ) -> bool:
     """Notify that voting is open now, with personal ballot link."""
     try:
         context = _base_context(token, recipient_override=recipient_override)
-        subject = f'Voting is open — {token.year.title}'
+        subject = resolve_subject(
+            config,
+            token.year,
+            default=f'Voting is open — {token.year.title}',
+        )
         recipient = recipient_override or token.person.email
         return BaseEmailService.send_email(
             subject=subject,
@@ -83,14 +101,18 @@ def send_voting_opened_email(
 def send_voting_closed_email(
     token: BallotToken,
     *,
-    config=None,
+    config: Optional[AwardNotificationConfig] = None,
     recipient_override: Optional[str] = None,
     is_async: bool = False,
 ) -> bool:
     """Notify that the voting window has closed."""
     try:
         context = _base_context(token, recipient_override=recipient_override)
-        subject = f'Voting has closed — {token.year.title}'
+        subject = resolve_subject(
+            config,
+            token.year,
+            default=f'Voting has closed — {token.year.title}',
+        )
         recipient = recipient_override or token.person.email
         return BaseEmailService.send_email(
             subject=subject,

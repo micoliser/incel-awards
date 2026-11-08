@@ -29,7 +29,12 @@ export const metadata: Metadata = {
   description:
     "Yearly employee awards for Incel Group across Tourism, Global, and General recognition.",
   icons: {
-    icon: "/global-favicon.png",
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/global-favicon.png", type: "image/png" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: "/global-favicon.png",
   },
 };
 

@@ -29,14 +29,27 @@ class SeedYear2026Tests(TestCase):
 
     def test_notification_config_defaults(self):
         year = seed_year_2026()
-        config = AwardNotificationConfig.objects.get(
-            year=year,
-            event=AwardNotificationConfig.Event.VOTE_INVITE,
+        configs = AwardNotificationConfig.objects.filter(year=year)
+        self.assertEqual(configs.count(), 5)
+        self.assertEqual(
+            set(configs.values_list('event', flat=True)),
+            {
+                AwardNotificationConfig.Event.ELIGIBILITY_NOTICE,
+                AwardNotificationConfig.Event.VOTE_INVITE,
+                AwardNotificationConfig.Event.VOTING_OPENED,
+                AwardNotificationConfig.Event.VOTING_CLOSING_REMINDER,
+                AwardNotificationConfig.Event.VOTING_CLOSED,
+            },
         )
-        self.assertTrue(config.enabled)
-        self.assertEqual(config.audience, AwardNotificationConfig.Audience.ALL_ELIGIBLE)
-        self.assertEqual(config.offset_minutes_before_open, 60)
-        self.assertEqual(config.channel, AwardNotificationConfig.Channel.EMAIL)
+        invite = configs.get(event=AwardNotificationConfig.Event.VOTE_INVITE)
+        self.assertTrue(invite.enabled)
+        self.assertEqual(invite.audience, AwardNotificationConfig.Audience.ALL_ELIGIBLE)
+        self.assertEqual(invite.offset_minutes_before_open, 60)
+        self.assertEqual(invite.channel, AwardNotificationConfig.Channel.EMAIL)
+        reminder = configs.get(
+            event=AwardNotificationConfig.Event.VOTING_CLOSING_REMINDER,
+        )
+        self.assertEqual(reminder.offset_minutes_before_close, 60)
 
     def test_idempotent_reseed(self):
         seed_year_2026()

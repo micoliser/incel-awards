@@ -62,12 +62,41 @@ class AwardYear(models.Model):
 
 class AwardNotificationConfig(models.Model):
     class Event(models.TextChoices):
-        ELIGIBILITY_NOTICE = 'eligibility_notice', 'Eligibility notice'
-        VOTE_INVITE = 'vote_invite', 'Vote invite'
+        # One row per season email. Timing fields apply only where noted.
+        ELIGIBILITY_NOTICE = (
+            'eligibility_notice',
+            '1. Eligibility notice (before open)',
+        )
+        VOTE_INVITE = (
+            'vote_invite',
+            '2. Vote ballot invite (before open)',
+        )
+        VOTING_OPENED = (
+            'voting_opened',
+            '3. Voting open (when window opens)',
+        )
         VOTING_CLOSING_REMINDER = (
             'voting_closing_reminder',
-            'Voting closing reminder',
+            '4. Voting closing reminder (before close)',
         )
+        VOTING_CLOSED = (
+            'voting_closed',
+            '5. Voting ended (when window closes)',
+        )
+
+    # Events that use offset_minutes_before_open / offset_minutes_before_close.
+    OPEN_OFFSET_EVENTS = frozenset({
+        Event.ELIGIBILITY_NOTICE.value,
+        Event.VOTE_INVITE.value,
+    })
+    CLOSE_OFFSET_EVENTS = frozenset({
+        Event.VOTING_CLOSING_REMINDER.value,
+    })
+    # Fired at status transition; no minute offset.
+    STATUS_EVENTS = frozenset({
+        Event.VOTING_OPENED.value,
+        Event.VOTING_CLOSED.value,
+    })
 
     class Channel(models.TextChoices):
         EMAIL = 'email', 'Email'

@@ -444,49 +444,56 @@ def seed_year_2026(awards: list[dict] | None = None) -> AwardYear:
         },
     )
 
-    AwardNotificationConfig.objects.update_or_create(
-        year=year,
-        event=AwardNotificationConfig.Event.ELIGIBILITY_NOTICE,
-        defaults={
-            'enabled': True,
-            'channel': AwardNotificationConfig.Channel.EMAIL,
-            'audience': AwardNotificationConfig.Audience.ALL_ELIGIBLE,
+    notification_specs = (
+        {
+            'event': AwardNotificationConfig.Event.ELIGIBILITY_NOTICE,
             'offset_minutes_before_open': 10,
+            'offset_minutes_before_close': 0,
             'subject_template': (
                 "You're eligible to vote — Incel Employee Awards {year}"
             ),
-            'extra': {},
         },
-    )
-
-    AwardNotificationConfig.objects.update_or_create(
-        year=year,
-        event=AwardNotificationConfig.Event.VOTE_INVITE,
-        defaults={
-            'enabled': True,
-            'channel': AwardNotificationConfig.Channel.EMAIL,
-            'audience': AwardNotificationConfig.Audience.ALL_ELIGIBLE,
+        {
+            'event': AwardNotificationConfig.Event.VOTE_INVITE,
             'offset_minutes_before_open': 60,
+            'offset_minutes_before_close': 0,
             'subject_template': 'Cast your vote — Incel Employee Awards {year}',
-            'extra': {},
         },
-    )
-
-    AwardNotificationConfig.objects.update_or_create(
-        year=year,
-        event=AwardNotificationConfig.Event.VOTING_CLOSING_REMINDER,
-        defaults={
-            'enabled': True,
-            'channel': AwardNotificationConfig.Channel.EMAIL,
-            'audience': AwardNotificationConfig.Audience.ALL_ELIGIBLE,
+        {
+            'event': AwardNotificationConfig.Event.VOTING_OPENED,
+            'offset_minutes_before_open': 0,
+            'offset_minutes_before_close': 0,
+            'subject_template': 'Voting is open — Incel Employee Awards {year}',
+        },
+        {
+            'event': AwardNotificationConfig.Event.VOTING_CLOSING_REMINDER,
             'offset_minutes_before_open': 0,
             'offset_minutes_before_close': 60,
             'subject_template': (
                 'Reminder: voting closes soon — Incel Employee Awards {year}'
             ),
-            'extra': {},
+        },
+        {
+            'event': AwardNotificationConfig.Event.VOTING_CLOSED,
+            'offset_minutes_before_open': 0,
+            'offset_minutes_before_close': 0,
+            'subject_template': 'Voting has closed — Incel Employee Awards {year}',
         },
     )
+    for spec in notification_specs:
+        AwardNotificationConfig.objects.update_or_create(
+            year=year,
+            event=spec['event'],
+            defaults={
+                'enabled': True,
+                'channel': AwardNotificationConfig.Channel.EMAIL,
+                'audience': AwardNotificationConfig.Audience.ALL_ELIGIBLE,
+                'offset_minutes_before_open': spec['offset_minutes_before_open'],
+                'offset_minutes_before_close': spec['offset_minutes_before_close'],
+                'subject_template': spec['subject_template'],
+                'extra': {},
+            },
+        )
 
     for spec in catalogue:
         award, _ = Award.objects.update_or_create(

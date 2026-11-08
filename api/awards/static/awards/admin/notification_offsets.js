@@ -1,41 +1,65 @@
 (function ($) {
+  var OPEN_EVENTS = {
+    eligibility_notice: true,
+    vote_invite: true,
+  };
+  var CLOSE_EVENTS = {
+    voting_closing_reminder: true,
+  };
+  var STATUS_EVENTS = {
+    voting_opened: true,
+    voting_closed: true,
+  };
+
   function modeFor(eventVal) {
-    if (eventVal === "voting_closing_reminder") return "close";
-    if (eventVal === "eligibility_notice" || eventVal === "vote_invite")
-      return "open";
+    if (OPEN_EVENTS[eventVal]) return "open";
+    if (CLOSE_EVENTS[eventVal]) return "close";
+    if (STATUS_EVENTS[eventVal]) return "status";
     return null;
   }
 
-  function findOffsetRows($row) {
-    var $open = $row.find(".form-row.field-offset_minutes_before_open");
-    var $close = $row.find(".form-row.field-offset_minutes_before_close");
-    if (!$open.length) {
-      $open = $row
-        .find(".field-offset_minutes_before_open")
-        .closest(".form-row, .fieldBox, .flex-container, .form-group");
+  function timingField($scope) {
+    return $scope
+      .find(
+        ".form-row.field-send_offset_minutes, .field-send_offset_minutes"
+      )
+      .first()
+      .closest(".form-row, .fieldBox, .flex-container, .form-group, div");
+  }
+
+  function labelFor(mode) {
+    if (mode === "open") {
+      return {
+        label: "Minutes before voting opens",
+        help: "Send this email this many minutes before voting opens.",
+      };
     }
-    if (!$close.length) {
-      $close = $row
-        .find(".field-offset_minutes_before_close")
-        .closest(".form-row, .fieldBox, .flex-container, .form-group");
+    if (mode === "close") {
+      return {
+        label: "Minutes before voting closes",
+        help: "Send this reminder this many minutes before voting closes (unsubmitted ballots only).",
+      };
     }
-    return { open: $open, close: $close };
+    return null;
   }
 
   function syncRow($row) {
     var $sel = $row.find('select[name="event"], select[name$="-event"]').first();
     if (!$sel.length) return;
     var mode = modeFor($sel.val());
-    var rows = findOffsetRows($row);
-    if (mode === "open") {
-      rows.open.show();
-      rows.close.hide();
-    } else if (mode === "close") {
-      rows.open.hide();
-      rows.close.show();
+    var $timing = timingField($row);
+    if (!$timing.length) return;
+
+    var meta = labelFor(mode);
+    if (mode === "status" || mode === null) {
+      $timing.hide();
     } else {
-      rows.open.hide();
-      rows.close.hide();
+      $timing.show();
+      if (meta) {
+        $timing.find("label").first().text(meta.label);
+        var $help = $timing.find(".help, .helptext").first();
+        if ($help.length) $help.text(meta.help);
+      }
     }
   }
 

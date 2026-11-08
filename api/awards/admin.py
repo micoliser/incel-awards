@@ -11,14 +11,6 @@ from awards.models import (
     Nominee,
 )
 
-OPEN_OFFSET_EVENTS = {
-    AwardNotificationConfig.Event.ELIGIBILITY_NOTICE,
-    AwardNotificationConfig.Event.VOTE_INVITE,
-}
-CLOSE_OFFSET_EVENTS = {
-    AwardNotificationConfig.Event.VOTING_CLOSING_REMINDER,
-}
-
 
 class AwardCriterionInline(admin.TabularInline):
     model = AwardCriterion
@@ -34,37 +26,100 @@ class NomineeInline(admin.TabularInline):
 
 
 class AwardNotificationConfigForm(forms.ModelForm):
+    """
+    One config = one email. Expose a single timing field that maps to the
+    correct DB column for that event (open-offset, close-offset, or none).
+    """
+
+    send_offset_minutes = forms.IntegerField(
+        required=False,
+        min_value=0,
+        label='Send this many minutes beforehand',
+        help_text='Only used for timed emails (eligibility, ballot invite, closing reminder).',
+    )
+
     class Meta:
         model = AwardNotificationConfig
-        fields = '__all__'
+        fields = (
+            'event',
+            'enabled',
+            'channel',
+            'audience',
+            'send_offset_minutes',
+            'subject_template',
+            'extra',
+        )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        open_field = self.fields.get('offset_minutes_before_open')
-        close_field = self.fields.get('offset_minutes_before_close')
-        if open_field:
-            open_field.label = 'Minutes before voting opens'
-            open_field.help_text = (
-                'Used for eligibility notice and vote invite only.'
+        instance = self.instance
+        event = None
+        if instance and instance.pk:
+            event = instance.event
+        elif self.data.get(self.add_prefix('event')):
+            event = self.data.get(self.add_prefix('event'))
+        elif self.initial.get('event'):
+            event = self.initial.get('event')
+
+        timing = self.fields['send_offset_minutes']
+        if event in AwardNotificationConfig.OPEN_OFFSET_EVENTS:
+            timing.label = 'Minutes before voting opens'
+            timing.help_text = (
+                'Send this email this many minutes before voting_opens_at.'
             )
-        if close_field:
-            close_field.label = 'Minutes before voting closes'
-            close_field.help_text = (
-                'Used for the closing reminder only (unsubmitted ballots).'
+            if instance and instance.pk and not self.is_bound:
+                timing.initial = instance.offset_minutes_before_open
+        elif event in AwardNotificationConfig.CLOSE_OFFSET_EVENTS:
+            timing.label = 'Minutes before voting closes'
+            timing.help_text = (
+                'Send this reminder this many minutes before voting_closes_at '
+                '(unsubmitted ballots only).'
             )
+            if instance and instance.pk and not self.is_bound:
+                timing.initial = instance.offset_minutes_before_close
+        elif event in AwardNotificationConfig.STATUS_EVENTS:
+            timing.label = 'Timing'
+            timing.help_text = (
+                'Not used — this email sends when the voting window opens or closes.'
+            )
+            timing.widget = forms.HiddenInput()
+        else:
+            # New empty inline row: keep field visible until an event is chosen.
+            timing.help_text = (
+                'Pick an event first. Timed emails need minutes; open/end emails do not.'
+            )
+
+    def save(self, commit=True):
+        obj = super().save(commit=False)
+        minutes = self.cleaned_data.get('send_offset_minutes')
+        if minutes is None:
+            minutes = 0
+        if obj.event in AwardNotificationConfig.OPEN_OFFSET_EVENTS:
+            obj.offset_minutes_before_open = minutes
+        elif obj.event in AwardNotificationConfig.CLOSE_OFFSET_EVENTS:
+            obj.offset_minutes_before_close = minutes
+        if commit:
+            obj.save()
+            self.save_m2m()
+        return obj
 
 
 class AwardNotificationConfigInline(admin.StackedInline):
     model = AwardNotificationConfig
     form = AwardNotificationConfigForm
     extra = 0
+    ordering = ('event',)
+    verbose_name = 'Season email'
+    verbose_name_plural = (
+        'Season emails — one row per notification '
+        '(eligibility → ballot invite → voting open → closing reminder → voting ended)'
+    )
     fields = (
         'event',
         'enabled',
         'channel',
         'audience',
-        'offset_minutes_before_open',
-        'offset_minutes_before_close',
+        'send_offset_minutes',
         'subject_template',
         'extra',
     )
@@ -164,14 +219,14 @@ class AwardNotificationConfigAdmin(admin.ModelAdmin):
         'timing_offset',
     )
     list_filter = ('event', 'enabled', 'audience', 'channel')
+    ordering = ('year', 'event')
     fields = (
         'year',
         'event',
         'enabled',
         'channel',
         'audience',
-        'offset_minutes_before_open',
-        'offset_minutes_before_close',
+        'send_offset_minutes',
         'subject_template',
         'extra',
     )
@@ -179,12 +234,14 @@ class AwardNotificationConfigAdmin(admin.ModelAdmin):
     class Media:
         js = ('awards/admin/notification_offsets.js',)
 
-    @admin.display(description='Timing offset')
+    @admin.display(description='Timing')
     def timing_offset(self, obj: AwardNotificationConfig):
-        if obj.event in CLOSE_OFFSET_EVENTS:
+        if obj.event in AwardNotificationConfig.CLOSE_OFFSET_EVENTS:
             return f'{obj.offset_minutes_before_close} min before close'
-        if obj.event in OPEN_OFFSET_EVENTS:
+        if obj.event in AwardNotificationConfig.OPEN_OFFSET_EVENTS:
             return f'{obj.offset_minutes_before_open} min before open'
+        if obj.event in AwardNotificationConfig.STATUS_EVENTS:
+            return 'At window open/close'
         return '—'
 
 
