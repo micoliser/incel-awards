@@ -15,7 +15,8 @@ class Command(BaseCommand):
 
         self.stdout.write(
             self.style.SUCCESS(
-                f'Sync complete: fetched={stats.fetched} '
+                f'Sync complete: fetched={stats.fetched} kept={stats.kept} '
+                f'filtered_out={stats.filtered_out} '
                 f'created={stats.created} updated={stats.updated} '
                 f'deactivated={stats.deactivated}'
             )

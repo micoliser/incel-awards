@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock, patch
 
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
 from people.models import OrgPerson
 from people.services.org_client import OrgUsersClient
@@ -123,6 +123,52 @@ class OrgSyncClassificationTests(TestCase):
         stats = sync_org_people()
         self.assertEqual(stats.created, 1)
         mock_fetch.assert_called_once()
+
+    def test_empty_allowlist_keeps_everyone(self):
+        users = [_user(30, dept='TOURISM'), _user(31, dept='HR')]
+        stats = sync_org_people(users, test_emails=[])
+        self.assertEqual(stats.fetched, 2)
+        self.assertEqual(stats.kept, 2)
+        self.assertEqual(stats.filtered_out, 0)
+        self.assertEqual(OrgPerson.objects.filter(is_active=True).count(), 2)
+
+    def test_allowlist_keeps_only_listed_emails(self):
+        users = [
+            _user(40, email='keep@incelgroup.com', dept='TOURISM'),
+            _user(41, email='drop@incelgroup.com', dept='HR'),
+            _user(42, email='Keep@IncelGroup.com', dept='TOURISM'),  # case
+        ]
+        # First sync everyone so drop exists, then restrict
+        sync_org_people(users, test_emails=[])
+        self.assertEqual(OrgPerson.objects.filter(is_active=True).count(), 3)
+
+        stats = sync_org_people(
+            users,
+            test_emails=['keep@incelgroup.com'],
+        )
+        self.assertEqual(stats.fetched, 3)
+        self.assertEqual(stats.kept, 2)  # keep + Keep@ (same allowlist entry)
+        self.assertEqual(stats.filtered_out, 1)
+        active = OrgPerson.objects.filter(is_active=True)
+        self.assertEqual(active.count(), 2)
+        self.assertTrue(
+            all(p.email.lower() == 'keep@incelgroup.com' for p in active)
+        )
+        dropped = OrgPerson.objects.get(external_id=41)
+        self.assertFalse(dropped.is_active)
+
+    @override_settings(ORG_USERS_TEST_EMAILS=['only@incelgroup.com'])
+    def test_settings_allowlist_applied(self):
+        stats = sync_org_people([
+            _user(50, email='only@incelgroup.com', dept='TOURISM'),
+            _user(51, email='other@incelgroup.com', dept='HR'),
+        ])
+        self.assertEqual(stats.kept, 1)
+        self.assertEqual(stats.filtered_out, 1)
+        self.assertEqual(
+            OrgPerson.objects.filter(is_active=True).get().email,
+            'only@incelgroup.com',
+        )
 
 
 class OrgUsersClientTests(TestCase):

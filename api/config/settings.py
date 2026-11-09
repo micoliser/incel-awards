@@ -146,6 +146,13 @@ ORG_USERS_API_TOKEN = os.getenv('ORG_USERS_API_TOKEN', '')
 ORG_USERS_API_AUTH_SCHEME = (
     os.getenv('ORG_USERS_API_AUTH_SCHEME', 'Bearer').strip() or 'Bearer'
 )
+# Comma/whitespace-separated emails for live testing. Empty = use everyone from
+# the org API. When set, only these people stay active after sync (tokens/emails).
+ORG_USERS_TEST_EMAILS = [
+    e.strip().lower()
+    for e in os.getenv('ORG_USERS_TEST_EMAILS', '').replace(';', ',').split(',')
+    if e.strip()
+]
 # Local fake directory at GET /api/v1/external/users (same path as production).
 DEV_ORG_USERS_ENABLED = os.getenv(
     'DEV_ORG_USERS_ENABLED',
