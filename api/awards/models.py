@@ -174,7 +174,19 @@ class Award(models.Model):
     )
     slug = models.SlugField(max_length=128)
     name = models.CharField(max_length=255)
-    description = models.TextField(blank=True, default='')
+    description = models.TextField(
+        blank=True,
+        default='',
+        help_text='About the award — shown on award pages and ballots.',
+    )
+    ideal_winner = models.TextField(
+        blank=True,
+        default='',
+        help_text=(
+            'An ideal winner — one trait per line. Shown under About on award '
+            'pages and ballots when set.'
+        ),
+    )
     division = models.CharField(max_length=16, choices=Division.choices)
     voting_mode = models.CharField(max_length=32, choices=VotingMode.choices)
     executive_weight = models.DecimalField(
@@ -193,6 +205,14 @@ class Award(models.Model):
     )
     sort_order = models.PositiveIntegerField(default=0)
     is_active = models.BooleanField(default=True)
+    company_vote_gated = models.BooleanField(
+        default=True,
+        help_text=(
+            'If true, tourism/global awards are limited to that company\'s staff. '
+            'If false, every Nigeria-eligible staff and executive may vote '
+            '(e.g. Excellent Leadership Tourism/Global).'
+        ),
+    )
 
     class Meta:
         ordering = ['sort_order', 'name']

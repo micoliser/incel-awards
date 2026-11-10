@@ -34,6 +34,7 @@ class BallotAwardSerializer(serializers.ModelSerializer):
             'slug',
             'name',
             'description',
+            'ideal_winner',
             'division',
             'voting_mode',
             'executive_weight',

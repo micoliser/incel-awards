@@ -1,8 +1,10 @@
 "use client";
 
+import { IdealWinnerList } from "@/components/ideal-winner-list";
 import { NomineeRadioGroup } from "@/components/vote/nominee-radio-group";
 import { PersonSearchPicker } from "@/components/vote/person-search-picker";
 import { divisionLabel, votingModeLabel } from "@/lib/format";
+import { idealWinnerLines } from "@/lib/ideal-winner";
 import type { BallotAward, Division } from "@/lib/types";
 
 const PLANE: Record<Division, string> = {
@@ -65,6 +67,17 @@ export function AwardVoteSection({
           <p className="mt-2 max-w-prose text-sm leading-relaxed text-ink-muted">
             {award.description}
           </p>
+        ) : null}
+        {idealWinnerLines(award.ideal_winner).length > 0 ? (
+          <div className="mt-3 max-w-prose">
+            <p className="font-[family-name:var(--font-label)] text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-muted">
+              An ideal winner
+            </p>
+            <IdealWinnerList
+              text={award.ideal_winner}
+              className="mt-2 text-ink-muted"
+            />
+          </div>
         ) : null}
 
         <div className="mt-5">

@@ -9,6 +9,9 @@ Award-division gating for ballots and tallies.
 |                | Nigeria-eligible executive (ED/MD)                        |
 | shared         | All Nigeria-eligible staff and executives                 |
 
+If ``award.company_vote_gated`` is False (e.g. Excellent Leadership Tourism/Global),
+every Nigeria-eligible staff and executive may vote regardless of company.
+
 Dubai / ineligible electorate are excluded via is_nigeria_eligible / electorate.
 """
 
@@ -29,6 +32,10 @@ def person_may_vote_on_award(person: OrgPerson, award: Award) -> bool:
         return False
     if not award.is_active:
         return False
+
+    # Awards open to all companies (e.g. leadership Tourism + Global lists).
+    if not getattr(award, 'company_vote_gated', True):
+        return True
 
     # Executive management (ED/MD) may vote across Tourism, Global, and General.
     if person.electorate == OrgPerson.Electorate.EXECUTIVE:

@@ -3,11 +3,16 @@ import { notFound } from "next/navigation";
 import { AwardStageBanner } from "@/components/award-stage-banner";
 import { DivisionLogo } from "@/components/brand-logos";
 import { CriteriaList } from "@/components/criteria-list";
+import { IdealWinnerList } from "@/components/ideal-winner-list";
 import { NomineeList } from "@/components/nominee-list";
 import { VotingRulesPanel } from "@/components/voting-rules-panel";
 import { YearStatusBadge } from "@/components/year-status-badge";
 import { getAward, getYear } from "@/lib/api";
 import { divisionLabel } from "@/lib/format";
+import { idealWinnerLines } from "@/lib/ideal-winner";
+
+/** Award detail reads route params + API data; allow blocking navigation. */
+export const instant = false;
 
 type PageProps = {
   params: Promise<{ year: string; slug: string }>;
@@ -44,11 +49,30 @@ export default async function AwardDetailPage({ params }: PageProps) {
         <YearStatusBadge status={yearMeta.status} />
       </div>
       <AwardStageBanner title={award.name} division={award.division} />
-      <p className="mt-6 max-w-prose text-base leading-relaxed text-ink-muted">
-        {award.description}
-      </p>
 
       <div className="mt-10 space-y-12">
+        {award.description ? (
+          <section>
+            <h2 className="font-[family-name:var(--font-display)] text-xl tracking-tight text-ink">
+              About the award
+            </h2>
+            <p className="mt-3 max-w-prose text-base leading-relaxed text-ink-muted">
+              {award.description}
+            </p>
+          </section>
+        ) : null}
+
+        {idealWinnerLines(award.ideal_winner).length > 0 ? (
+          <section>
+            <h2 className="font-[family-name:var(--font-display)] text-xl tracking-tight text-ink">
+              An ideal winner
+            </h2>
+            <div className="mt-3 max-w-prose">
+              <IdealWinnerList text={award.ideal_winner} />
+            </div>
+          </section>
+        ) : null}
+
         <VotingRulesPanel award={award} />
 
         {(award.criteria?.length ?? 0) > 0 ? (

@@ -224,8 +224,20 @@ python manage.py createsuperuser
    - Notification configs:
      - **eligibility_notice** → e.g. `10` minutes before open
      - **vote_invite** → e.g. `5`–`60` minutes before open
-4. Add awards / nominees in admin  
-   (`year_2026.py` seed is gitignored because it contains nominees — do **not** commit it).
+4. Seed / refresh the 2026 catalogue (idempotent; removes retired slugs such as
+   Supervisor of the Year and shared Rookie, and replaces Leadership / Rookie with
+   Tourism + Global splits):
+
+```bash
+python manage.py seed_year_2026
+```
+
+   Expect **14** awards (6 weighted including both leadership awards, 6 shortlist
+   including both Rookie awards, 2 open). Spot-check that Tourism staff see
+   **Rookie (Tourism)** only and Global staff see **Rookie (Global)** only, while
+   both ballots include **Department of the Year (Tourism + Global)** and
+   **Excellent Leadership (Tourism + Global)**.
+
 5. Confirm org sync + mail tick (one-shots):
 
 ```bash

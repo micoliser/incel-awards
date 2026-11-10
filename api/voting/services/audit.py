@@ -287,6 +287,7 @@ def _award_audit(award: Award, year_votes: list[Vote]) -> dict[str, Any]:
         'division': award.division,
         'voting_mode': award.voting_mode,
         'description': award.description,
+        'ideal_winner': award.ideal_winner,
         'votes_cast': len(award_votes),
         'calculation': calculation,
         'nominees': nominee_rows,

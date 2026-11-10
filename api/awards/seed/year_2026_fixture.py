@@ -20,6 +20,114 @@ from awards.notification_defaults import ensure_default_notification_configs
 
 YEAR = 2026
 
+
+def _ideal(*lines: str) -> str:
+    """Store ideal-winner traits as one line each (UI renders as a list)."""
+    return '\n'.join(lines)
+
+
+# About + ideal winner copy from Awards_Shortlist_Review_2026.pptx
+EMPLOYEE_ABOUT = (
+    "This award recognises the individual employee whose performance and "
+    "reliability stood out above everyone else's. It celebrates someone who "
+    "consistently delivers, can be depended on and lifts the team around them."
+)
+EMPLOYEE_IDEAL = _ideal(
+    'Consistently delivers exceptional results',
+    'Is reliable and dependable',
+    'Collaborates well with the team',
+    'Shows integrity and a good attitude to work',
+)
+
+DEPARTMENT_ABOUT = (
+    'This award recognises the department that delivered the strongest '
+    'collective results and the best teamwork. It celebrates collective '
+    'achievement across the department, not the performance of an '
+    'individual department head. All Nigeria-eligible staff and executives '
+    'vote on both Tourism and Global lists.'
+)
+DEPARTMENT_IDEAL = _ideal(
+    'Delivers strong collective results',
+    'Works well with other departments',
+    'Improves processes through innovation',
+    'Upholds decorum and communicates well',
+)
+
+ROOKIE_ABOUT = (
+    'This award recognises the standout newcomer, under one year in, who made '
+    'the fastest and biggest impact. It celebrates someone who settled in '
+    'quickly, learned fast and delivered beyond what is expected for their '
+    'experience. Eligibility (under one year in the organisation) has been '
+    'confirmed.'
+)
+ROOKIE_IDEAL = _ideal(
+    'Delivers high-quality work early',
+    'Learns quickly and masters the role',
+    'Is a proactive team player',
+    'Fits into the company culture',
+)
+
+LEADERSHIP_ABOUT = (
+    'This award recognises an individual who inspires, motivates and guides '
+    'others towards organisational objectives. It celebrates a leader who leads '
+    'by example and empowers others, rewarding effectiveness and positive '
+    'influence rather than seniority or designation. Cash prize: ₦300,000. '
+    'All Nigeria-eligible staff and executives vote on both Tourism and Global lists.'
+)
+LEADERSHIP_IDEAL = _ideal(
+    'Leads by example with strong ethics',
+    'Inspires, mentors and empowers others',
+    'Promotes collaboration and a positive culture',
+)
+
+PIONEER_ABOUT = (
+    'This award recognises the staff member whose idea or initiative delivered '
+    'a genuine improvement for the companies. It celebrates original thinking '
+    'that improved how the business operates, backed by problem-solving and '
+    'good use of technology.'
+)
+PIONEER_IDEAL = _ideal(
+    'Brings original ideas to the business',
+    'Delivers measurable business improvement',
+    'Takes initiative in solving problems',
+    'Uses technology well to improve operations',
+)
+
+BEST_DRESSED_ABOUT = (
+    'This award recognises the staff member who consistently sets the standard '
+    'for professional dressing. It is given in two categories, male and female, '
+    'and rewards a polished appearance that follows the office dress code, day '
+    'after day.'
+)
+BEST_DRESSED_IDEAL = _ideal(
+    'Looks professional and well put together',
+    'Is neat and well groomed',
+    'Dresses consistently, not just occasionally',
+    'Shows style and elegance',
+)
+
+STEEZE_ABOUT = (
+    'This award recognises the staff member who stays composed, calm and sharp '
+    'when the pressure is highest. High delivery of work is a key requirement, '
+    'so composure alone is not enough.'
+)
+STEEZE_IDEAL = _ideal(
+    'Stays calm and in control in a crisis',
+    'Makes decisive calls under pressure',
+    'Reassures and de-escalates for the team',
+    'Still delivers high-quality work',
+)
+
+FOODIE_ABOUT = (
+    'Foodie of the Year recognises the staff member most enthusiastic about food '
+    'at work, from potlucks to lunch runs.'
+)
+
+EMPLOYEES_CHOICE_ABOUT = (
+    "Employees' Choice of the Year recognises the colleague staff most enjoy "
+    'working with and is decided purely by popular vote, with no scored criteria.'
+)
+
 # Shared criteria templates (label, weight_percent)
 EMPLOYEE_CRITERIA = [
     ('Job performance and consistency', Decimal('30')),
@@ -41,7 +149,7 @@ DEPARTMENT_CRITERIA = [
     ('Collective proficiency', Decimal('30')),
     ('Inter-departmental relations', Decimal('25')),
     ('Innovation', Decimal('20')),
-    ('Decorum and comportment', Decimal('15')),
+    ('Decorum & comportment', Decimal('15')),
     ('Communication', Decimal('10')),
 ]
 
@@ -49,7 +157,7 @@ ROOKIE_CRITERIA = [
     ('Quality of work', Decimal('30')),
     ('Learning ability', Decimal('20')),
     ('Role mastery', Decimal('20')),
-    ('Team player and proactive initiative', Decimal('20')),
+    ('Team player and initiative', Decimal('20')),
     ('Culture integration', Decimal('10')),
 ]
 
@@ -78,11 +186,11 @@ STEEZE_CRITERIA = [
 ]
 
 LEADERSHIP_CRITERIA = [
-    ('Influence without formal authority', Decimal('30')),
-    ('Initiative and ownership', Decimal('20')),
-    ('Guidance and support to colleagues', Decimal('20')),
-    ('Reliability and leading by example', Decimal('15')),
-    ('Collaboration and culture', Decimal('15')),
+    ('Leadership and ability to inspire', Decimal('25')),
+    ('Strategic thinking and objectives', Decimal('20')),
+    ('Integrity and ethical conduct', Decimal('20')),
+    ('Team development and mentorship', Decimal('20')),
+    ('Communication and collaboration', Decimal('15')),
 ]
 
 
@@ -115,10 +223,8 @@ AWARDS = [
     {
         'slug': 'employee-of-the-year-tourism',
         'name': 'Employee of the Year (Tourism)',
-        'description': (
-            "This award recognises the individual employee whose performance and "
-            "reliability stood out above everyone else's."
-        ),
+        'description': EMPLOYEE_ABOUT,
+        'ideal_winner': EMPLOYEE_IDEAL,
         'division': Award.Division.TOURISM,
         'voting_mode': Award.VotingMode.WEIGHTED,
         'executive_weight': Decimal('0.30'),
@@ -129,15 +235,15 @@ AWARDS = [
             'Tourism Employee A',
             'Tourism Employee B',
             'Tourism Employee C',
+            'Tourism Employee D',
+            'Tourism Employee E',
         ),
     },
     {
         'slug': 'employee-of-the-year-global',
         'name': 'Employee of the Year (Global)',
-        'description': (
-            "This award recognises the individual employee whose performance and "
-            "reliability stood out above everyone else's."
-        ),
+        'description': EMPLOYEE_ABOUT,
+        'ideal_winner': EMPLOYEE_IDEAL,
         'division': Award.Division.GLOBAL,
         'voting_mode': Award.VotingMode.WEIGHTED,
         'executive_weight': Decimal('0.30'),
@@ -148,123 +254,100 @@ AWARDS = [
             'Global Employee A',
             'Global Employee B',
             'Global Employee C',
-        ),
-    },
-    {
-        'slug': 'supervisor-of-the-year-tourism',
-        'name': 'Supervisor of the Year (Tourism)',
-        'description': (
-            'This award recognises the supervisor who led, developed and got the '
-            'most out of their team this year.'
-        ),
-        'division': Award.Division.TOURISM,
-        'voting_mode': Award.VotingMode.WEIGHTED,
-        'executive_weight': Decimal('0.60'),
-        'staff_weight': Decimal('0.40'),
-        'sort_order': 30,
-        'criteria': SUPERVISOR_CRITERIA,
-        'nominees': _people(
-            'Tourism Supervisor A',
-            'Tourism Supervisor B',
-            'Tourism Supervisor C',
-            'Tourism Supervisor D',
-        ),
-    },
-    {
-        'slug': 'supervisor-of-the-year-global',
-        'name': 'Supervisor of the Year (Global)',
-        'description': (
-            'This award recognises the supervisor who led, developed and got the '
-            'most out of their team this year.'
-        ),
-        'division': Award.Division.GLOBAL,
-        'voting_mode': Award.VotingMode.WEIGHTED,
-        'executive_weight': Decimal('0.60'),
-        'staff_weight': Decimal('0.40'),
-        'sort_order': 40,
-        'criteria': SUPERVISOR_CRITERIA,
-        'nominees': _people(
-            'Global Supervisor A',
-            'Global Supervisor B',
-            'Global Supervisor C',
-            'Global Supervisor D',
+            'Global Employee D',
+            'Global Employee E',
         ),
     },
     {
         'slug': 'department-of-the-year-tourism',
         'name': 'Department of the Year (Tourism)',
-        'description': (
-            'This award recognises the department that delivered the strongest '
-            'collective results and the best teamwork.'
-        ),
+        'description': DEPARTMENT_ABOUT,
+        'ideal_winner': DEPARTMENT_IDEAL,
         'division': Award.Division.TOURISM,
         'voting_mode': Award.VotingMode.WEIGHTED,
         'executive_weight': Decimal('0.50'),
         'staff_weight': Decimal('0.50'),
-        'sort_order': 50,
+        'company_vote_gated': False,
+        'sort_order': 30,
         'criteria': DEPARTMENT_CRITERIA,
         'nominees': _departments(
+            'Brand & Marketing',
+            'IT',
+            'Admin',
+            'Internal Control',
             'Operations',
-            'Sales',
-            'Brands and Marketing',
-            'Internal Control and Risk',
-            'Accounts',
         ),
     },
     {
         'slug': 'department-of-the-year-global',
         'name': 'Department of the Year (Global)',
-        'description': (
-            'This award recognises the department that delivered the strongest '
-            'collective results and the best teamwork.'
-        ),
+        'description': DEPARTMENT_ABOUT,
+        'ideal_winner': DEPARTMENT_IDEAL,
         'division': Award.Division.GLOBAL,
         'voting_mode': Award.VotingMode.WEIGHTED,
         'executive_weight': Decimal('0.50'),
         'staff_weight': Decimal('0.50'),
-        'sort_order': 60,
+        'company_vote_gated': False,
+        'sort_order': 40,
         'criteria': DEPARTMENT_CRITERIA,
         'nominees': _departments(
-            'Transaction Processing',
-            'HR and Admin',
-            'Internal Control and Audit',
             'IT',
-            'Export (Flexus)',
+            'Admin',
+            'Transaction Processing',
             'Accounts',
+            'Flexxus',
         ),
     },
     {
-        'slug': 'rookie-of-the-year',
-        'name': 'Rookie of the Year',
+        'slug': 'rookie-of-the-year-tourism',
+        'name': 'Rookie of the Year (Tourism)',
         'description': (
-            'This award recognises the standout newcomer, under one year in, who made '
-            'the fastest and biggest impact.'
+            f'{ROOKIE_ABOUT} Tourism staff vote on this list.'
         ),
-        'division': Award.Division.SHARED,
+        'ideal_winner': ROOKIE_IDEAL,
+        'division': Award.Division.TOURISM,
         'voting_mode': Award.VotingMode.STAFF_SHORTLIST,
         'executive_weight': None,
         'staff_weight': None,
-        'sort_order': 70,
+        'sort_order': 50,
         'criteria': ROOKIE_CRITERIA,
         'nominees': _people(
-            'Rookie Nominee A',
-            'Rookie Nominee B',
-            'Rookie Nominee C',
-            'Rookie Nominee D',
+            'Tourism Rookie A',
+            'Tourism Rookie B',
+            'Tourism Rookie C',
+            'Tourism Rookie D',
+        ),
+    },
+    {
+        'slug': 'rookie-of-the-year-global',
+        'name': 'Rookie of the Year (Global)',
+        'description': (
+            f'{ROOKIE_ABOUT} Global staff vote on this list.'
+        ),
+        'ideal_winner': ROOKIE_IDEAL,
+        'division': Award.Division.GLOBAL,
+        'voting_mode': Award.VotingMode.STAFF_SHORTLIST,
+        'executive_weight': None,
+        'staff_weight': None,
+        'sort_order': 55,
+        'criteria': ROOKIE_CRITERIA,
+        'nominees': _people(
+            'Global Rookie A',
+            'Global Rookie B',
+            'Global Rookie C',
+            'Global Rookie D',
         ),
     },
     {
         'slug': 'pioneer-award-for-innovation',
         'name': 'Pioneer Award for Innovation',
-        'description': (
-            'This award recognises the staff member whose idea or initiative delivered '
-            'a genuine improvement for the companies.'
-        ),
+        'description': PIONEER_ABOUT,
+        'ideal_winner': PIONEER_IDEAL,
         'division': Award.Division.SHARED,
         'voting_mode': Award.VotingMode.STAFF_SHORTLIST,
         'executive_weight': None,
         'staff_weight': None,
-        'sort_order': 80,
+        'sort_order': 60,
         'criteria': PIONEER_CRITERIA,
         'nominees': _people(
             'Pioneer Nominee A',
@@ -277,15 +360,13 @@ AWARDS = [
     {
         'slug': 'best-dressed-male',
         'name': 'Best Dressed (Male)',
-        'description': (
-            'This award recognises the staff member who consistently sets the standard '
-            'for professional dressing.'
-        ),
+        'description': BEST_DRESSED_ABOUT,
+        'ideal_winner': BEST_DRESSED_IDEAL,
         'division': Award.Division.SHARED,
         'voting_mode': Award.VotingMode.STAFF_SHORTLIST,
         'executive_weight': None,
         'staff_weight': None,
-        'sort_order': 90,
+        'sort_order': 70,
         'criteria': BEST_DRESSED_CRITERIA,
         'nominees': _people(
             'Best Dressed Male A',
@@ -297,15 +378,13 @@ AWARDS = [
     {
         'slug': 'best-dressed-female',
         'name': 'Best Dressed (Female)',
-        'description': (
-            'This award recognises the staff member who consistently sets the standard '
-            'for professional dressing.'
-        ),
+        'description': BEST_DRESSED_ABOUT,
+        'ideal_winner': BEST_DRESSED_IDEAL,
         'division': Award.Division.SHARED,
         'voting_mode': Award.VotingMode.STAFF_SHORTLIST,
         'executive_weight': None,
         'staff_weight': None,
-        'sort_order': 100,
+        'sort_order': 80,
         'criteria': BEST_DRESSED_CRITERIA,
         'nominees': _people(
             'Best Dressed Female A',
@@ -317,15 +396,13 @@ AWARDS = [
     {
         'slug': 'steeze-under-pressure',
         'name': 'Steeze Under Pressure',
-        'description': (
-            'This award recognises the staff member who stays composed, calm and sharp '
-            'when the pressure is highest. High delivery of work is a key requirement.'
-        ),
+        'description': STEEZE_ABOUT,
+        'ideal_winner': STEEZE_IDEAL,
         'division': Award.Division.SHARED,
         'voting_mode': Award.VotingMode.STAFF_SHORTLIST,
         'executive_weight': None,
         'staff_weight': None,
-        'sort_order': 110,
+        'sort_order': 90,
         'criteria': STEEZE_CRITERIA,
         'nominees': _people(
             'Steeze Nominee A',
@@ -335,54 +412,68 @@ AWARDS = [
         ),
     },
     {
-        'slug': 'excellent-leadership-award',
-        'name': 'Excellent Leadership Award',
-        'description': (
-            'This award recognises staff who hold no official leadership title but lead '
-            'in practice: colleagues others turn to, who step up, guide teammates and move '
-            'work forward without being asked. Supervisors and other formal team leads are '
-            'not eligible.'
-        ),
-        'division': Award.Division.SHARED,
-        'voting_mode': Award.VotingMode.STAFF_SHORTLIST,
-        'executive_weight': None,
-        'staff_weight': None,
-        'sort_order': 120,
+        'slug': 'excellent-leadership-award-tourism',
+        'name': 'Excellent Leadership Award (Tourism)',
+        'description': LEADERSHIP_ABOUT,
+        'ideal_winner': LEADERSHIP_IDEAL,
+        'division': Award.Division.TOURISM,
+        'voting_mode': Award.VotingMode.WEIGHTED,
+        'executive_weight': Decimal('0.20'),
+        'staff_weight': Decimal('0.80'),
+        'company_vote_gated': False,
+        'sort_order': 25,
         'criteria': LEADERSHIP_CRITERIA,
         'nominees': _people(
-            'Leadership Nominee A',
-            'Leadership Nominee B',
-            'Leadership Nominee C',
-            'Leadership Nominee D',
+            'Benjamin Okoro',
+            'Joy Nwaise',
+            'Uche Maduka',
+            'Marcathy Atsegbua',
+            'Solomon Aneke',
+        ),
+    },
+    {
+        'slug': 'excellent-leadership-award-global',
+        'name': 'Excellent Leadership Award (Global)',
+        'description': LEADERSHIP_ABOUT,
+        'ideal_winner': LEADERSHIP_IDEAL,
+        'division': Award.Division.GLOBAL,
+        'voting_mode': Award.VotingMode.WEIGHTED,
+        'executive_weight': Decimal('0.20'),
+        'staff_weight': Decimal('0.80'),
+        'company_vote_gated': False,
+        'sort_order': 28,
+        'criteria': LEADERSHIP_CRITERIA,
+        'nominees': _people(
+            'Oluwaseun Agunkejoye',
+            'Festus Adeoye',
+            'Oyedeji Oyedokun',
+            'Okechukwu Osademe',
+            'Oluwaseyi Elias',
         ),
     },
     {
         'slug': 'foodie-of-the-year',
         'name': 'Foodie of the Year',
-        'description': (
-            'Foodie of the Year recognises the staff member most enthusiastic about food '
-            'at work, from potlucks to lunch runs.'
-        ),
+        'description': FOODIE_ABOUT,
+        'ideal_winner': '',
         'division': Award.Division.SHARED,
         'voting_mode': Award.VotingMode.STAFF_OPEN,
         'executive_weight': None,
         'staff_weight': None,
-        'sort_order': 130,
+        'sort_order': 120,
         'criteria': [],
         'nominees': [],
     },
     {
         'slug': 'employees-choice-of-the-year',
         'name': "Employees' Choice of the Year",
-        'description': (
-            "Employees' Choice of the Year recognises the colleague staff most enjoy "
-            "working with and is decided purely by popular vote, with no scored criteria."
-        ),
+        'description': EMPLOYEES_CHOICE_ABOUT,
+        'ideal_winner': '',
         'division': Award.Division.SHARED,
         'voting_mode': Award.VotingMode.STAFF_OPEN,
         'executive_weight': None,
         'staff_weight': None,
-        'sort_order': 140,
+        'sort_order': 130,
         'criteria': [],
         'nominees': [],
     },
@@ -453,10 +544,12 @@ def seed_year_2026(awards: list[dict] | None = None) -> AwardYear:
             defaults={
                 'name': spec['name'],
                 'description': spec['description'],
+                'ideal_winner': spec.get('ideal_winner', ''),
                 'division': spec['division'],
                 'voting_mode': spec['voting_mode'],
                 'executive_weight': spec['executive_weight'],
                 'staff_weight': spec['staff_weight'],
+                'company_vote_gated': spec.get('company_vote_gated', True),
                 'sort_order': spec['sort_order'],
                 'is_active': True,
             },

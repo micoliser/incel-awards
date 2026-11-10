@@ -87,3 +87,90 @@ class DivisionGatingTests(TestCase):
         for award in (self.tourism_award, self.global_award, self.shared_award):
             self.assertTrue(person_may_vote_on_award(tourism_ed, award))
             self.assertTrue(person_may_vote_on_award(global_md, award))
+
+    def test_ungated_leadership_open_to_all_staff(self):
+        leadership_tourism = Award.objects.create(
+            year=self.year,
+            slug='excellent-leadership-award-tourism',
+            name='Leadership Tourism',
+            division=Award.Division.TOURISM,
+            voting_mode=Award.VotingMode.WEIGHTED,
+            company_vote_gated=False,
+            executive_weight='0.20',
+            staff_weight='0.80',
+        )
+        leadership_global = Award.objects.create(
+            year=self.year,
+            slug='excellent-leadership-award-global',
+            name='Leadership Global',
+            division=Award.Division.GLOBAL,
+            voting_mode=Award.VotingMode.WEIGHTED,
+            company_vote_gated=False,
+            executive_weight='0.20',
+            staff_weight='0.80',
+        )
+        tourism_staff = self._p(
+            7, company='tourism', department_code='TOURISM'
+        )
+        global_staff = self._p(8, company='global')
+        self.assertTrue(person_may_vote_on_award(tourism_staff, leadership_tourism))
+        self.assertTrue(person_may_vote_on_award(tourism_staff, leadership_global))
+        self.assertTrue(person_may_vote_on_award(global_staff, leadership_tourism))
+        self.assertTrue(person_may_vote_on_award(global_staff, leadership_global))
+        # Company-gated awards still respect division for staff.
+        self.assertFalse(person_may_vote_on_award(tourism_staff, self.global_award))
+        self.assertFalse(person_may_vote_on_award(global_staff, self.tourism_award))
+
+    def test_ungated_department_open_to_all_staff(self):
+        dept_tourism = Award.objects.create(
+            year=self.year,
+            slug='department-of-the-year-tourism',
+            name='Department Tourism',
+            division=Award.Division.TOURISM,
+            voting_mode=Award.VotingMode.WEIGHTED,
+            company_vote_gated=False,
+            executive_weight='0.50',
+            staff_weight='0.50',
+        )
+        dept_global = Award.objects.create(
+            year=self.year,
+            slug='department-of-the-year-global',
+            name='Department Global',
+            division=Award.Division.GLOBAL,
+            voting_mode=Award.VotingMode.WEIGHTED,
+            company_vote_gated=False,
+            executive_weight='0.50',
+            staff_weight='0.50',
+        )
+        tourism_staff = self._p(
+            11, company='tourism', department_code='TOURISM'
+        )
+        global_staff = self._p(12, company='global')
+        self.assertTrue(person_may_vote_on_award(tourism_staff, dept_tourism))
+        self.assertTrue(person_may_vote_on_award(tourism_staff, dept_global))
+        self.assertTrue(person_may_vote_on_award(global_staff, dept_tourism))
+        self.assertTrue(person_may_vote_on_award(global_staff, dept_global))
+
+    def test_company_gated_rookie_split(self):
+        rookie_tourism = Award.objects.create(
+            year=self.year,
+            slug='rookie-of-the-year-tourism',
+            name='Rookie Tourism',
+            division=Award.Division.TOURISM,
+            voting_mode=Award.VotingMode.STAFF_SHORTLIST,
+        )
+        rookie_global = Award.objects.create(
+            year=self.year,
+            slug='rookie-of-the-year-global',
+            name='Rookie Global',
+            division=Award.Division.GLOBAL,
+            voting_mode=Award.VotingMode.STAFF_SHORTLIST,
+        )
+        tourism_staff = self._p(
+            9, company='tourism', department_code='TOURISM'
+        )
+        global_staff = self._p(10, company='global')
+        self.assertTrue(person_may_vote_on_award(tourism_staff, rookie_tourism))
+        self.assertFalse(person_may_vote_on_award(tourism_staff, rookie_global))
+        self.assertTrue(person_may_vote_on_award(global_staff, rookie_global))
+        self.assertFalse(person_may_vote_on_award(global_staff, rookie_tourism))

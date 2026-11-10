@@ -10,6 +10,9 @@ import {
 } from "@/lib/format";
 import type { AuditAward, AuditNomineeRow, Division } from "@/lib/types";
 
+/** Audit reads params / preview searchParams; allow blocking navigation. */
+export const instant = false;
+
 type PageProps = {
   params: Promise<{ year: string }>;
   searchParams: Promise<{ preview?: string }>;

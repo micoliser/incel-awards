@@ -2,10 +2,14 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AwardCard } from "@/components/award-card";
 import { DivisionLogo } from "@/components/brand-logos";
+import { ConfettiSplash } from "@/components/confetti-splash";
 import { YearStatusBadge } from "@/components/year-status-badge";
 import { getAwards, getYear } from "@/lib/api";
 import { formatDateTime } from "@/lib/format";
 import type { Award, Division } from "@/lib/types";
+
+/** Year hub reads route params + year meta; allow blocking navigation. */
+export const instant = false;
 
 type PageProps = {
   params: Promise<{ year: string }>;
@@ -38,7 +42,8 @@ export default async function YearHubPage({ params }: PageProps) {
 
   return (
     <main>
-      <section className="weave-ground border-b border-[var(--rule)]">
+      <ConfettiSplash />
+      <section className="border-b border-[var(--rule)]">
         <div className="mx-auto max-w-6xl px-5 py-16 sm:px-8 sm:py-20">
           <div className="flex flex-wrap items-center gap-3">
             <YearStatusBadge status={yearMeta.status} />

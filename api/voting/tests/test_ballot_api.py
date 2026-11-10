@@ -101,7 +101,10 @@ class BallotApiTests(APITestCase):
         slugs = {a['slug'] for a in response.data['awards']}
         self.assertIn('employee-of-the-year-tourism', slugs)
         self.assertNotIn('employee-of-the-year-global', slugs)
-        self.assertIn('rookie-of-the-year', slugs)  # shared
+        self.assertIn('department-of-the-year-tourism', slugs)
+        self.assertIn('department-of-the-year-global', slugs)
+        self.assertIn('rookie-of-the-year-tourism', slugs)
+        self.assertNotIn('rookie-of-the-year-global', slugs)
         self.assertIn('foodie-of-the-year', slugs)
         self.assertEqual(response.data['voter']['company'], 'tourism')
         self.assertFalse(response.data['is_submitted'])
@@ -116,7 +119,10 @@ class BallotApiTests(APITestCase):
         slugs = {a['slug'] for a in response.data['awards']}
         self.assertIn('employee-of-the-year-global', slugs)
         self.assertNotIn('employee-of-the-year-tourism', slugs)
-        self.assertIn('rookie-of-the-year', slugs)
+        self.assertIn('department-of-the-year-tourism', slugs)
+        self.assertIn('department-of-the-year-global', slugs)
+        self.assertIn('rookie-of-the-year-global', slugs)
+        self.assertNotIn('rookie-of-the-year-tourism', slugs)
 
     def test_put_complete_ballot_and_reject_resubmit(self):
         award = Award.objects.get(year=self.year, slug='employee-of-the-year-tourism')

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AwardCard } from "@/components/award-card";
+import { ConfettiSplash } from "@/components/confetti-splash";
 import { getAwards, getYear } from "@/lib/api";
 import { divisionLabel } from "@/lib/format";
 import type { Division } from "@/lib/types";
@@ -46,6 +47,7 @@ export default async function AwardsCataloguePage({
 
   return (
     <main className="mx-auto max-w-6xl px-5 py-14 sm:px-8">
+      <ConfettiSplash />
       <p className="font-[family-name:var(--font-label)] text-[11px] uppercase tracking-[0.16em] text-ink-muted">
         <Link href={`/${year}`} className="thread-link">
           {yearMeta.title}

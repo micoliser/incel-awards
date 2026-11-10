@@ -114,14 +114,14 @@ class WeightedTallyPDFScenariosTests(TestCase):
         self.assertEqual(result.winners[0].display_name, 'Mercy')
         self.assertFalse(result.winners[0].is_tie)
 
-    def test_supervisor_60_40_scenario(self):
+    def test_weighted_60_40_scenario(self):
         """
-        Supervisor (60/40), E=2.
+        Generic weighted (60/40), E=2.
         A: 1 exec + 60/100 staff → 0.30 + 0.24 = 0.54
         B: 1 exec + 40/100 staff → 0.30 + 0.16 = 0.46
         """
         award, (a, b, *_rest) = self._make_weighted_award(
-            'supervisor-tourism',
+            'weighted-60-40',
             0.60,
             0.40,
             ['Marcathy', 'Ayoola', 'Uche', 'Solomon'],

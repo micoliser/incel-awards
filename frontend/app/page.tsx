@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { ConfettiSplash } from "@/components/confetti-splash";
 import { SiteHeader } from "@/components/site-header";
 import { YearStatusBadge } from "@/components/year-status-badge";
 import {
@@ -24,27 +25,25 @@ export default async function HomePage() {
 
   return (
     <>
+      <ConfettiSplash />
       <SiteHeader
         year={current?.year}
         votingOpensAt={current?.voting_opens_at}
         votingClosesAt={current?.voting_closes_at}
+        overlay
       />
       <main className="flex-1">
         <section className="relative min-h-[min(100svh,900px)] overflow-hidden">
           <Image
-            src="/images/hero-weave.jpg"
+            src="/images/hero-mask-kente.jpg"
             alt=""
             fill
             priority
-            className="object-cover"
+            className="object-cover object-center"
             sizes="100vw"
           />
           <div
-            className="absolute inset-0 bg-gradient-to-t from-[color-mix(in_srgb,var(--ground)_96%,transparent)] via-[color-mix(in_srgb,var(--indigo-deep)_72%,transparent)] to-[color-mix(in_srgb,var(--ground)_35%,transparent)]"
-            aria-hidden
-          />
-          <div
-            className="pointer-events-none absolute inset-x-0 top-0 h-1 weave-band animate-band sm:h-1.5"
+            className="absolute inset-0 bg-gradient-to-t from-[color-mix(in_srgb,var(--ground)_98%,transparent)] via-[color-mix(in_srgb,var(--ground)_88%,transparent)] to-[color-mix(in_srgb,var(--ground)_70%,transparent)]"
             aria-hidden
           />
           <div className="relative mx-auto flex min-h-[min(100svh,900px)] max-w-6xl flex-col justify-end px-5 pb-16 pt-28 sm:px-8 sm:pb-24 sm:pt-36">
@@ -146,9 +145,9 @@ export default async function HomePage() {
           </div>
         </section>
 
-        <section className="border-y border-[var(--rule)] bg-ground-deep/60">
+        <section className="border-y border-[var(--rule)] bg-[color-mix(in_srgb,var(--ground-deep)_45%,var(--ground))]">
           <div className="mx-auto grid max-w-6xl items-center gap-10 px-5 py-16 sm:px-8 lg:grid-cols-2 lg:gap-16">
-            <div className="relative aspect-[4/3] overflow-hidden bg-indigo-deep">
+            <div className="relative aspect-[4/3] overflow-hidden bg-surface">
               <Image
                 src="/images/season-ceremony.jpg"
                 alt="Colleagues celebrating recognition at Incel Group Employee Awards"

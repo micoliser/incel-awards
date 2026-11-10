@@ -114,7 +114,8 @@ Unique `(year, event)`.
 | `year` | FK AwardYear | |
 | `slug` | slug | Unique per year |
 | `name` | CharField | |
-| `description` | TextField | |
+| `description` | TextField | About the award |
+| `ideal_winner` | TextField | Ideal-winner traits, one per line (blank if none) |
 | `division` | CharField | `tourism` \| `global` \| `shared` |
 | `voting_mode` | CharField | `weighted` \| `staff_shortlist` \| `staff_open` |
 | `executive_weight` | Decimal null | 0.30 etc.; only weighted |
@@ -227,7 +228,7 @@ Base path: `/api/v1/`
 | GET | `/years/{year}/awards/` | Awards for year (public fields; no tallies) |
 | GET | `/years/{year}/awards/{slug}/` | Award + criteria + confirmed nominees + voting rules summary |
 
-Public award payload should include enough for overview pages: name, description, division, mode, weights, criteria, nominees (name + justification), status relative to voting window.
+Public award payload should include enough for overview pages: name, description, ideal_winner, division, mode, weights, criteria, nominees (name + justification), status relative to voting window.
 
 ### Ballot (token auth)
 

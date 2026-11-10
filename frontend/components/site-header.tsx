@@ -8,12 +8,15 @@ type SiteHeaderProps = {
   year?: number;
   votingOpensAt?: string | null;
   votingClosesAt?: string | null;
+  /** When true, skip the layout spacer so a full-bleed hero can sit under the bar. */
+  overlay?: boolean;
 };
 
 export function SiteHeader({
   year,
   votingOpensAt = null,
   votingClosesAt = null,
+  overlay = false,
 }: SiteHeaderProps) {
   const hasSchedule = Boolean(votingOpensAt || votingClosesAt);
   const spacerClass = hasSchedule
@@ -74,7 +77,7 @@ export function SiteHeader({
           <div className="h-0.5 weave-band opacity-90" aria-hidden />
         </header>
       </div>
-      <div className={spacerClass} aria-hidden />
+      {overlay ? null : <div className={spacerClass} aria-hidden />}
     </>
   );
 }

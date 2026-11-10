@@ -81,7 +81,8 @@ EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend
 ```
 
 1. Start Redis, API, Celery worker, Celery beat, frontend.
-2. Seed once if needed: `python manage.py seed_year_2026`
+2. Seed / reseed catalogue if needed: `python manage.py seed_year_2026`
+   (drops removed awards such as Supervisor; upserts leadership Tourism/Global)
 3. Django admin → **Award years** → 2026:
    - Set `voting_opens_at` ~15 minutes from now
    - Set `voting_closes_at` later the same day

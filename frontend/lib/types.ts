@@ -31,6 +31,8 @@ export type Award = {
   slug: string;
   name: string;
   description: string;
+  /** One ideal-winner trait per line; empty when the deck has none. */
+  ideal_winner?: string;
   division: Division;
   voting_mode: VotingMode;
   executive_weight: number | string | null;
@@ -79,6 +81,7 @@ export type BallotAward = {
   slug: string;
   name: string;
   description: string;
+  ideal_winner?: string;
   division: Division;
   voting_mode: VotingMode;
   executive_weight: number | string | null;

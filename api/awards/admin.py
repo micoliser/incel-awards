@@ -263,12 +263,19 @@ class AwardAdmin(admin.ModelAdmin):
         'slug',
         'division',
         'voting_mode',
+        'company_vote_gated',
         'executive_weight',
         'staff_weight',
         'sort_order',
         'is_active',
     )
-    list_filter = ('year', 'division', 'voting_mode', 'is_active')
+    list_filter = (
+        'year',
+        'division',
+        'voting_mode',
+        'company_vote_gated',
+        'is_active',
+    )
     search_fields = ('name', 'slug')
     prepopulated_fields = {'slug': ('name',)}
     inlines = [AwardCriterionInline, NomineeInline]

@@ -67,6 +67,7 @@ class PublicReadApiTests(APITestCase):
             'slug',
             'name',
             'description',
+            'ideal_winner',
             'division',
             'voting_mode',
             'executive_weight',
@@ -85,7 +86,7 @@ class PublicReadApiTests(APITestCase):
 
         shared = self.client.get(url, {'division': 'shared'})
         self.assertEqual(shared.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(shared.data), 8)
+        self.assertEqual(len(shared.data), 6)
 
     def test_award_detail_includes_criteria_nominees_rules(self):
         url = reverse(
@@ -98,8 +99,10 @@ class PublicReadApiTests(APITestCase):
         self.assertEqual(data['slug'], 'employee-of-the-year-tourism')
         self.assertEqual(data['division'], 'tourism')
         self.assertEqual(data['voting_mode'], 'weighted')
+        self.assertIn('lifts the team around them', data['description'])
+        self.assertEqual(len(data['ideal_winner'].splitlines()), 4)
         self.assertEqual(len(data['criteria']), 5)
-        self.assertEqual(len(data['nominees']), 3)
+        self.assertEqual(len(data['nominees']), 5)
         names = [n['display_name'] for n in data['nominees']]
         self.assertTrue(all(isinstance(n, str) and n.strip() for n in names))
         rules = data['voting_rules']
