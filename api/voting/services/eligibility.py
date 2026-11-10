@@ -1,11 +1,13 @@
 """
 Award-division gating for ballots and tallies.
 
-| award.division | Who may vote                                      |
-|----------------|---------------------------------------------------|
-| tourism        | Nigeria-eligible AND company = tourism            |
-| global         | Nigeria-eligible AND company = global             |
-| shared         | All Nigeria-eligible voters                       |
+| award.division | Who may vote                                              |
+|----------------|-----------------------------------------------------------|
+| tourism        | Nigeria-eligible staff with company = tourism, **or** any |
+|                | Nigeria-eligible executive (ED/MD)                        |
+| global         | Nigeria-eligible staff with company = global, **or** any  |
+|                | Nigeria-eligible executive (ED/MD)                        |
+| shared         | All Nigeria-eligible staff and executives                 |
 
 Dubai / ineligible electorate are excluded via is_nigeria_eligible / electorate.
 """
@@ -28,6 +30,10 @@ def person_may_vote_on_award(person: OrgPerson, award: Award) -> bool:
     if not award.is_active:
         return False
 
+    # Executive management (ED/MD) may vote across Tourism, Global, and General.
+    if person.electorate == OrgPerson.Electorate.EXECUTIVE:
+        return True
+
     division = award.division
     if division == Award.Division.SHARED:
         return True
@@ -48,18 +54,14 @@ def awards_for_voter(person: OrgPerson, year):
 
 def eligible_executives_for_award(award: Award):
     """
-    Nigeria-eligible executives whose company may vote on this award.
+    Nigeria-eligible executives who may vote on this award.
 
-    Used as E in weighted tallies (not hardcoded 2).
+    Used as E in weighted tallies (not hardcoded 2). Executives are not
+    company-gated, so E is the full Nigeria-eligible executive set for every
+    division.
     """
-    qs = OrgPerson.objects.filter(
+    return OrgPerson.objects.filter(
         is_active=True,
         is_nigeria_eligible=True,
         electorate=OrgPerson.Electorate.EXECUTIVE,
     )
-    if award.division == Award.Division.TOURISM:
-        qs = qs.filter(company=OrgPerson.Company.TOURISM)
-    elif award.division == Award.Division.GLOBAL:
-        qs = qs.filter(company=OrgPerson.Company.GLOBAL)
-    # shared: all nigeria-eligible executives
-    return qs

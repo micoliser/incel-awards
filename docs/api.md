@@ -283,7 +283,7 @@ def tally_award(award: Award) -> AwardTallyResult:
     """
 ```
 
-Eligible exec count = Nigeria-eligible executives whose company may vote on this award (same division rules).
+Eligible exec count = all Nigeria-eligible executives (ED/MD). Executives are not company-gated; staff still are for tourism/global.
 
 Write unit tests from PDF scenarios (Employee Tourism 30/70, Supervisor 60/40, Department 50/50).
 

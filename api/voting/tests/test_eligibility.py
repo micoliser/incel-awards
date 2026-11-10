@@ -68,3 +68,22 @@ class DivisionGatingTests(TestCase):
         for award in (self.tourism_award, self.global_award, self.shared_award):
             self.assertFalse(person_may_vote_on_award(dubai, award))
             self.assertFalse(person_may_vote_on_award(intern, award))
+
+    def test_executive_votes_all_divisions(self):
+        tourism_ed = self._p(
+            5,
+            company='tourism',
+            department_code='TOURISM',
+            role_code='ED',
+            electorate='executive',
+        )
+        global_md = self._p(
+            6,
+            company='global',
+            department_code='HR',
+            role_code='MD',
+            electorate='executive',
+        )
+        for award in (self.tourism_award, self.global_award, self.shared_award):
+            self.assertTrue(person_may_vote_on_award(tourism_ed, award))
+            self.assertTrue(person_may_vote_on_award(global_md, award))
