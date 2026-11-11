@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { divisionLabel, votingModeLabel } from "@/lib/format";
+import { divisionLabel } from "@/lib/format";
 import type { Award, Division } from "@/lib/types";
 
 const DIVISION_PLANE: Record<Division, string> = {
@@ -38,7 +38,7 @@ export function AwardCard({ year, award }: AwardCardProps) {
       <div className="px-5 py-5">
         <div className="flex items-start justify-between gap-3">
           <p className="font-[family-name:var(--font-label)] text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-muted">
-            {divisionLabel(award.division)} · {votingModeLabel(award.voting_mode)}
+            {divisionLabel(award.division)}
           </p>
           <Image
             src="/images/award-trophy.png"
