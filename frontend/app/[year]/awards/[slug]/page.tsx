@@ -72,7 +72,7 @@ export default async function AwardDetailPage({ params }: PageProps) {
           </section>
         ) : null}
 
-        <VotingRulesPanel award={award} />
+        <VotingRulesPanel />
 
         {(award.criteria?.length ?? 0) > 0 ? (
           <section>

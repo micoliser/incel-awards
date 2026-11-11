@@ -1,7 +1,5 @@
-import type { Award } from "@/lib/types";
-
 /** Same public copy for every award — no voting-mode or electorate details. */
-export function VotingRulesPanel({ award: _award }: { award: Award }) {
+export function VotingRulesPanel() {
   return (
     <div className="stage-panel px-5 py-5">
       <h2 className="font-[family-name:var(--font-display)] text-base tracking-tight text-ink">
