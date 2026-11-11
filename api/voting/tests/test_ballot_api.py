@@ -110,6 +110,17 @@ class BallotApiTests(APITestCase):
         self.assertFalse(response.data['is_submitted'])
         self.assertTrue(response.data['writes_allowed'])
 
+        weighted = next(
+            a
+            for a in response.data['awards']
+            if a['slug'] == 'employee-of-the-year-tourism'
+        )
+        self.assertGreaterEqual(len(weighted['nominees']), 1)
+        self.assertNotIn('executive_weight', weighted)
+        self.assertNotIn('staff_weight', weighted)
+        for criterion in weighted.get('criteria') or []:
+            self.assertNotIn('weight_percent', criterion)
+
     def test_global_ballot_filters_awards(self):
         response = self.client.get(
             self._ballot_url(),
@@ -323,6 +334,14 @@ class BallotApiTests(APITestCase):
         self.assertIn('methodology', ok.data)
         self.assertIn('awards', ok.data)
         self.assertIn('weighted', ok.data['methodology'])
+        # Audit still exposes weighted maths for the committee.
+        weighted_rows = [
+            row for row in ok.data['awards'] if row.get('voting_mode') == 'weighted'
+        ]
+        self.assertTrue(weighted_rows)
+        calc = weighted_rows[0].get('calculation') or {}
+        self.assertIn('executive_weight', calc)
+        self.assertIn('staff_weight', calc)
 
     def test_results_missing_year_404(self):
         url = reverse('year-results', kwargs={'year': 1999})

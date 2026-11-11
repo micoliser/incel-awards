@@ -57,8 +57,8 @@ export default async function AwardsCataloguePage({
         Award catalogue
       </h1>
       <p className="mt-3 max-w-prose text-sm text-ink-muted">
-        Filter by division. Cards show voting mode and nominee count. Open an
-        award for criteria and rules.
+        Filter by division. Cards show voting mode. Open an award for about,
+        criteria, and how voting works.
       </p>
 
       <div

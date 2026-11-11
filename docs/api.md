@@ -226,9 +226,9 @@ Base path: `/api/v1/`
 | GET | `/years/` | List years (year, title, status, windows) |
 | GET | `/years/{year}/` | Year detail + counts |
 | GET | `/years/{year}/awards/` | Awards for year (public fields; no tallies) |
-| GET | `/years/{year}/awards/{slug}/` | Award + criteria + confirmed nominees + voting rules summary |
+| GET | `/years/{year}/awards/{slug}/` | Award + criteria labels + voting mode (no shortlist, share %, or criterion weights) |
 
-Public award payload should include enough for overview pages: name, description, ideal_winner, division, mode, weights, criteria, nominees (name + justification), status relative to voting window.
+Public award payload is anti-campaigning: name, description, ideal_winner, division, mode, criterion **labels** (no `weight_percent`), empty `nominees`, and voting rules **without** exec/staff share ratios. Shortlists appear only on the token ballot. Share ratios and criterion weights stay committee-only (admin + results audit).
 
 ### Ballot (token auth)
 

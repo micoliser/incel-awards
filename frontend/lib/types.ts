@@ -11,7 +11,8 @@ export type VotingWindowStatus = "upcoming" | "open" | "closed" | string;
 export type AwardCriterion = {
   id?: number;
   label: string;
-  weight_percent: number | string;
+  /** Omitted on public/ballot payloads; present only in committee audit. */
+  weight_percent?: number | string;
   sort_order?: number;
 };
 
@@ -35,18 +36,20 @@ export type Award = {
   ideal_winner?: string;
   division: Division;
   voting_mode: VotingMode;
-  executive_weight: number | string | null;
-  staff_weight: number | string | null;
+  /** Public API omits share ratios (committee-only). */
+  executive_weight?: number | string | null;
+  staff_weight?: number | string | null;
   sort_order?: number;
   is_active?: boolean;
   voting_rules?: {
     division: Division;
     mode: VotingMode;
-    executive_weight: number | string | null;
-    staff_weight: number | string | null;
+    executive_weight?: number | string | null;
+    staff_weight?: number | string | null;
   };
   voting_window_status?: VotingWindowStatus;
   criteria?: AwardCriterion[];
+  /** Always empty on public pages; ballot payload includes shortlist. */
   nominees?: Nominee[];
 };
 
@@ -63,7 +66,6 @@ export type AwardYearSummary = {
 
 export type AwardYearDetail = AwardYearSummary & {
   awards_count: number;
-  confirmed_nominees_count?: number;
   voting_window_status?: VotingWindowStatus;
   description: string;
 };
@@ -84,8 +86,6 @@ export type BallotAward = {
   ideal_winner?: string;
   division: Division;
   voting_mode: VotingMode;
-  executive_weight: number | string | null;
-  staff_weight: number | string | null;
   sort_order?: number;
   criteria: AwardCriterion[];
   nominees: Nominee[];

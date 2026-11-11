@@ -1,7 +1,10 @@
 from rest_framework import serializers
 
 from awards.models import Award
-from awards.serializers import AwardCriterionSerializer, NomineePublicSerializer
+from awards.serializers import (
+    AwardCriterionPublicSerializer,
+    NomineePublicSerializer,
+)
 from people.models import OrgPerson
 from voting.models import Vote
 
@@ -24,7 +27,9 @@ class VoterProfileSerializer(serializers.ModelSerializer):
 
 
 class BallotAwardSerializer(serializers.ModelSerializer):
-    criteria = AwardCriterionSerializer(many=True, read_only=True)
+    """Ballot payload: nominees for voting; no share ratios or criterion weights."""
+
+    criteria = AwardCriterionPublicSerializer(many=True, read_only=True)
     nominees = serializers.SerializerMethodField()
     current_vote = serializers.SerializerMethodField()
 
@@ -37,8 +42,6 @@ class BallotAwardSerializer(serializers.ModelSerializer):
             'ideal_winner',
             'division',
             'voting_mode',
-            'executive_weight',
-            'staff_weight',
             'sort_order',
             'criteria',
             'nominees',

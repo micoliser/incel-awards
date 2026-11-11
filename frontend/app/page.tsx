@@ -180,8 +180,9 @@ export default async function HomePage() {
                     <p className="mt-2 text-sm leading-relaxed text-ink-muted">
                       The committee gathers what the year revealed: strong
                       delivery, quiet leadership, team excellence, and the
-                      moments that lifted the companies. Shortlists and
-                      criteria are published so everyone can see the standard.
+                      moments that lifted the companies. Award descriptions and
+                      criteria are published so everyone can see the standard;
+                      shortlists appear only on personal ballots.
                     </p>
                   </div>
                 </li>

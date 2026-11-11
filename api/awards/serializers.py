@@ -33,7 +33,6 @@ class AwardYearListSerializer(serializers.ModelSerializer):
 
 class AwardYearDetailSerializer(serializers.ModelSerializer):
     awards_count = serializers.IntegerField(read_only=True)
-    confirmed_nominees_count = serializers.IntegerField(read_only=True)
     voting_window_status = serializers.SerializerMethodField()
 
     class Meta:
@@ -48,7 +47,6 @@ class AwardYearDetailSerializer(serializers.ModelSerializer):
             'voting_closes_at',
             'results_published_at',
             'awards_count',
-            'confirmed_nominees_count',
             'voting_window_status',
         )
 
@@ -57,6 +55,8 @@ class AwardYearDetailSerializer(serializers.ModelSerializer):
 
 
 class AwardListSerializer(serializers.ModelSerializer):
+    """Public catalogue — no share ratios or shortlist size."""
+
     class Meta:
         model = Award
         fields = (
@@ -66,17 +66,25 @@ class AwardListSerializer(serializers.ModelSerializer):
             'ideal_winner',
             'division',
             'voting_mode',
-            'executive_weight',
-            'staff_weight',
             'sort_order',
             'is_active',
         )
 
 
 class AwardCriterionSerializer(serializers.ModelSerializer):
+    """Full criterion including weight (ballot/audit internal use)."""
+
     class Meta:
         model = AwardCriterion
         fields = ('id', 'label', 'weight_percent', 'sort_order')
+
+
+class AwardCriterionPublicSerializer(serializers.ModelSerializer):
+    """Public pages: criterion labels only — weights are committee-only."""
+
+    class Meta:
+        model = AwardCriterion
+        fields = ('id', 'label', 'sort_order')
 
 
 class NomineePublicSerializer(serializers.ModelSerializer):
@@ -93,7 +101,15 @@ class NomineePublicSerializer(serializers.ModelSerializer):
 
 
 class AwardDetailSerializer(serializers.ModelSerializer):
-    criteria = AwardCriterionSerializer(many=True, read_only=True)
+    """
+    Public award detail.
+
+    Nominees and exec/staff share ratios stay off the public API (anti-campaigning;
+    ratios are committee-only). Criteria labels stay; weight_percent does not.
+    Ballot endpoints still expose nominees when voting is open.
+    """
+
+    criteria = AwardCriterionPublicSerializer(many=True, read_only=True)
     nominees = serializers.SerializerMethodField()
     voting_rules = serializers.SerializerMethodField()
     year = serializers.IntegerField(source='year.year', read_only=True)
@@ -109,8 +125,6 @@ class AwardDetailSerializer(serializers.ModelSerializer):
             'ideal_winner',
             'division',
             'voting_mode',
-            'executive_weight',
-            'staff_weight',
             'sort_order',
             'is_active',
             'voting_rules',
@@ -120,17 +134,13 @@ class AwardDetailSerializer(serializers.ModelSerializer):
         )
 
     def get_nominees(self, obj):
-        confirmed = [
-            n for n in obj.nominees.all() if n.is_confirmed
-        ]
-        return NomineePublicSerializer(confirmed, many=True).data
+        # Shortlists are revealed only on the personal ballot, not public pages.
+        return []
 
     def get_voting_rules(self, obj):
         return {
             'division': obj.division,
             'mode': obj.voting_mode,
-            'executive_weight': obj.executive_weight,
-            'staff_weight': obj.staff_weight,
         }
 
     def get_voting_window_status(self, obj):

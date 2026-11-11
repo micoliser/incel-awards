@@ -20,7 +20,10 @@ type PageProps = {
 
 export async function generateMetadata({ params }: PageProps) {
   const { year } = await params;
-  return { title: `Voting breakdown ${year}` };
+  return {
+    title: `Voting breakdown ${year}`,
+    robots: { index: false, follow: false },
+  };
 }
 
 function pctPoints(fraction: number | string | null | undefined): number {

@@ -2,7 +2,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from awards.models import Award, AwardYear, Nominee
+from awards.models import Award
 from awards.seed import seed_year_2026
 
 
@@ -29,7 +29,7 @@ class PublicReadApiTests(APITestCase):
         data = response.data
         self.assertEqual(data['year'], 2026)
         self.assertEqual(data['awards_count'], 14)
-        self.assertGreater(data['confirmed_nominees_count'], 0)
+        self.assertNotIn('confirmed_nominees_count', data)
         self.assertIn('voting_window_status', data)
         self.assertIn('description', data)
         # No tallies / tokens
@@ -70,10 +70,10 @@ class PublicReadApiTests(APITestCase):
             'ideal_winner',
             'division',
             'voting_mode',
-            'executive_weight',
-            'staff_weight',
         ):
             self.assertIn(key, sample)
+        self.assertNotIn('executive_weight', sample)
+        self.assertNotIn('staff_weight', sample)
         self.assertNotIn('nominees', sample)
         self.assertNotIn('votes', sample)
 
@@ -88,7 +88,7 @@ class PublicReadApiTests(APITestCase):
         self.assertEqual(shared.status_code, status.HTTP_200_OK)
         self.assertEqual(len(shared.data), 6)
 
-    def test_award_detail_includes_criteria_nominees_rules(self):
+    def test_award_detail_hides_shortlist_weights_and_share_ratios(self):
         url = reverse(
             'year-award-detail',
             kwargs={'year': 2026, 'slug': 'employee-of-the-year-tourism'},
@@ -102,38 +102,20 @@ class PublicReadApiTests(APITestCase):
         self.assertIn('lifts the team around them', data['description'])
         self.assertEqual(len(data['ideal_winner'].splitlines()), 4)
         self.assertEqual(len(data['criteria']), 5)
-        self.assertEqual(len(data['nominees']), 5)
-        names = [n['display_name'] for n in data['nominees']]
-        self.assertTrue(all(isinstance(n, str) and n.strip() for n in names))
+        for criterion in data['criteria']:
+            self.assertIn('label', criterion)
+            self.assertNotIn('weight_percent', criterion)
+        # Shortlists stay off the public catalogue (ballot-only).
+        self.assertEqual(data['nominees'], [])
+        self.assertNotIn('executive_weight', data)
+        self.assertNotIn('staff_weight', data)
         rules = data['voting_rules']
         self.assertEqual(rules['division'], 'tourism')
         self.assertEqual(rules['mode'], 'weighted')
-        self.assertEqual(str(rules['executive_weight']), '0.30')
-        self.assertEqual(str(rules['staff_weight']), '0.70')
+        self.assertNotIn('executive_weight', rules)
+        self.assertNotIn('staff_weight', rules)
         self.assertNotIn('votes', data)
         self.assertNotIn('tallies', data)
-
-    def test_unconfirmed_nominees_excluded(self):
-        award = Award.objects.get(
-            year=self.year,
-            slug='pioneer-award-for-innovation',
-        )
-        Nominee.objects.create(
-            award=award,
-            nominee_type=Nominee.NomineeType.PERSON,
-            display_name='Unconfirmed Shadow Nominee',
-            is_confirmed=False,
-            sort_order=99,
-        )
-        url = reverse(
-            'year-award-detail',
-            kwargs={'year': 2026, 'slug': 'pioneer-award-for-innovation'},
-        )
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        names = [n['display_name'] for n in response.data['nominees']]
-        self.assertNotIn('Unconfirmed Shadow Nominee', names)
-        self.assertEqual(len(names), 5)
 
     def test_inactive_award_hidden(self):
         award = Award.objects.get(

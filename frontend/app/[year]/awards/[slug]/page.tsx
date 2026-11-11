@@ -4,7 +4,6 @@ import { AwardStageBanner } from "@/components/award-stage-banner";
 import { DivisionLogo } from "@/components/brand-logos";
 import { CriteriaList } from "@/components/criteria-list";
 import { IdealWinnerList } from "@/components/ideal-winner-list";
-import { NomineeList } from "@/components/nominee-list";
 import { VotingRulesPanel } from "@/components/voting-rules-panel";
 import { YearStatusBadge } from "@/components/year-status-badge";
 import { getAward, getYear } from "@/lib/api";
@@ -92,18 +91,13 @@ export default async function AwardDetailPage({ params }: PageProps) {
 
         <section>
           <h2 className="font-[family-name:var(--font-display)] text-xl tracking-tight text-ink">
-            Nominees
+            Shortlist
           </h2>
-          <div className="mt-4">
-            {award.voting_mode === "staff_open" ? (
-              <p className="text-sm text-ink-muted">
-                Open award: choose any eligible colleague on your ballot when
-                voting opens.
-              </p>
-            ) : (
-              <NomineeList nominees={award.nominees ?? []} />
-            )}
-          </div>
+          <p className="mt-3 max-w-prose text-sm text-ink-muted">
+            {award.voting_mode === "staff_open"
+              ? "Open award: choose any eligible colleague on your personal ballot when voting opens."
+              : "Nominees are not listed publicly. Eligible voters see the shortlist on their personal ballot when voting opens."}
+          </p>
         </section>
 
         <p className="border-t border-[var(--rule)] pt-6 text-sm text-ink-muted">

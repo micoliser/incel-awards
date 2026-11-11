@@ -1,11 +1,11 @@
-from django.db.models import Count, Prefetch, Q
+from django.db.models import Count, Q
 from rest_framework import status
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from awards.models import Award, AwardYear, Nominee
+from awards.models import Award, AwardYear
 from awards.serializers import (
     AwardDetailSerializer,
     AwardListSerializer,
@@ -35,14 +35,6 @@ class YearDetailView(RetrieveAPIView):
             awards_count=Count(
                 'awards',
                 filter=Q(awards__is_active=True),
-                distinct=True,
-            ),
-            confirmed_nominees_count=Count(
-                'awards__nominees',
-                filter=Q(
-                    awards__is_active=True,
-                    awards__nominees__is_confirmed=True,
-                ),
                 distinct=True,
             ),
         )
@@ -90,13 +82,7 @@ class YearAwardDetailView(APIView):
                 is_active=True,
             )
             .select_related('year')
-            .prefetch_related(
-                'criteria',
-                Prefetch(
-                    'nominees',
-                    queryset=Nominee.objects.order_by('sort_order', 'id'),
-                ),
-            )
+            .prefetch_related('criteria')
             .first()
         )
         if award is None:

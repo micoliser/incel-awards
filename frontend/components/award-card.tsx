@@ -21,17 +21,10 @@ function excerpt(text: string, max = 140): string {
 }
 
 export function AwardCard({ year, award }: AwardCardProps) {
-  const nominees = award.nominees ?? [];
-  const confirmed = nominees.filter((n) => n.is_confirmed !== false).length;
-
-  let meta: string;
-  if (award.voting_mode === "staff_open") {
-    meta = "Open roster choice";
-  } else if (confirmed > 0) {
-    meta = `${confirmed} nominee${confirmed === 1 ? "" : "s"}`;
-  } else {
-    meta = "View criteria and nominees";
-  }
+  const meta =
+    award.voting_mode === "staff_open"
+      ? "Open roster choice"
+      : "View about and criteria";
 
   return (
     <Link
