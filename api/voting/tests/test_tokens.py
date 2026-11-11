@@ -1,5 +1,5 @@
 from django.core.management import call_command
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from io import StringIO
 
 from awards.models import AwardYear
@@ -77,3 +77,48 @@ class GenerateBallotTokensTests(TestCase):
         call_command('generate_ballot_tokens', '--year', '2026', stdout=out)
         self.assertIn('created=1', out.getvalue())
         self.assertEqual(BallotToken.objects.count(), 1)
+
+    def test_empty_exclusion_mints_for_everyone_eligible(self):
+        keep = _make_person(1, email='hr@admin.com')
+        with override_settings(BALLOT_EXCLUDED_EMAILS=[]):
+            stats = generate_ballot_tokens(self.year)
+        self.assertEqual(stats.eligible, 1)
+        self.assertEqual(stats.created, 1)
+        self.assertEqual(
+            BallotToken.objects.filter(year=self.year).get().person_id,
+            keep.id,
+        )
+
+    @override_settings(
+        BALLOT_EXCLUDED_EMAILS=['hr@admin.com', 'samueliwelumo@gmail.com']
+    )
+    def test_excluded_emails_do_not_get_tokens(self):
+        keep = _make_person(1, email='keeper@incelgroup.com')
+        _make_person(2, email='hr@admin.com')
+        _make_person(3, email='SamuelIwelumo@gmail.com')  # case-insensitive
+        stats = generate_ballot_tokens(self.year)
+        self.assertEqual(stats.eligible, 1)
+        self.assertEqual(stats.created, 1)
+        tokens = BallotToken.objects.filter(year=self.year)
+        self.assertEqual(tokens.count(), 1)
+        self.assertEqual(tokens.get().person_id, keep.id)
+
+    @override_settings(
+        BALLOT_EXCLUDED_EMAILS=['hr@admin.com', 'samueliwelumo@gmail.com']
+    )
+    def test_excluded_emails_are_not_recreated_after_delete(self):
+        _make_person(1, email='hr@admin.com')
+        # Simulate a pre-existing token that ops deletes from admin.
+        person = OrgPerson.objects.get(email='hr@admin.com')
+        BallotToken.objects.create(
+            year=self.year,
+            person=person,
+            token='stale-token-should-not-return',
+        )
+        BallotToken.objects.filter(year=self.year, person=person).delete()
+        stats = generate_ballot_tokens(self.year)
+        self.assertEqual(stats.eligible, 0)
+        self.assertEqual(stats.created, 0)
+        self.assertFalse(
+            BallotToken.objects.filter(year=self.year, person=person).exists()
+        )

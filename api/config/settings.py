@@ -153,11 +153,22 @@ ORG_USERS_TEST_EMAILS = [
     for e in os.getenv('ORG_USERS_TEST_EMAILS', '').replace(';', ',').split(',')
     if e.strip()
 ]
+# Optional comma-separated emails that never get ballot tokens.
+# Empty = no exclusion (all Nigeria-eligible staff/executives get tokens).
+# Season emails and voting both require a BallotToken, so exclusion here is enough.
+BALLOT_EXCLUDED_EMAILS = sorted(
+    {
+        e.strip().lower()
+        for e in os.getenv('BALLOT_EXCLUDED_EMAILS', '').replace(';', ',').split(',')
+        if e.strip()
+    }
+)
 # Local fake directory at GET /api/v1/external/users (same path as production).
 DEV_ORG_USERS_ENABLED = os.getenv(
     'DEV_ORG_USERS_ENABLED',
     'True' if DEBUG else 'False',
 ).lower() in ('true', '1', 'yes')
+
 
 # ------------------------------------------------------------------------------
 # CELERY — split schedules: org sync (workspace API) vs mail/status (no API)

@@ -7,7 +7,9 @@ from __future__ import annotations
 import secrets
 from dataclasses import dataclass
 
+from django.conf import settings
 from django.db import transaction
+from django.db.models.functions import Lower
 from django.utils import timezone
 
 from awards.models import AwardYear
@@ -26,9 +28,18 @@ def generate_token_value() -> str:
     return secrets.token_urlsafe(32)
 
 
+def ballot_excluded_emails() -> set[str]:
+    """Lowercased emails that must never receive ballot tokens."""
+    return {
+        e.strip().lower()
+        for e in (getattr(settings, 'BALLOT_EXCLUDED_EMAILS', None) or [])
+        if e and str(e).strip()
+    }
+
+
 def eligible_voters_queryset():
     """People who receive ballot tokens for a year."""
-    return OrgPerson.objects.filter(
+    qs = OrgPerson.objects.filter(
         is_active=True,
         is_nigeria_eligible=True,
         electorate__in=(
@@ -36,6 +47,10 @@ def eligible_voters_queryset():
             OrgPerson.Electorate.EXECUTIVE,
         ),
     )
+    excluded = ballot_excluded_emails()
+    if excluded:
+        qs = qs.annotate(_email_l=Lower('email')).exclude(_email_l__in=excluded)
+    return qs
 
 
 @transaction.atomic

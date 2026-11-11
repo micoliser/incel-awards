@@ -15,6 +15,7 @@ Copy `api/.env.example` → `api/.env`. Critical keys:
 | `CORS_ALLOWED_ORIGINS` | Production CORS (DEBUG allows all) |
 | `ORG_USERS_API_BASE_URL` / `ORG_USERS_API_TOKEN` / `ORG_USERS_API_AUTH_SCHEME` | Org roster sync — `GET {base}/api/v1/external/users` with `Authorization: Bearer <token>` |
 | `ORG_USERS_TEST_EMAILS` | Optional comma-separated allowlist for live tests; empty = full API roster |
+| `BALLOT_EXCLUDED_EMAILS` | Optional comma-separated emails that never get ballot tokens; empty = no exclusion |
 | `DEV_ORG_USERS_ENABLED` | Local fake directory at the same `/api/v1/external/users` path |
 | `EMAIL_*` / `EMAIL_ENABLED` / `EMAIL_DEBUG` | Console locally; SMTP in production |
 | `CELERY_BROKER_URL` / `CELERY_RESULT_BACKEND` | Redis for Celery worker + beat |
