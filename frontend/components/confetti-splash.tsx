@@ -12,42 +12,19 @@ const PALETTE = [
   "#f4f1ea",
 ];
 
-const STORAGE_KEY = "incel-awards-confetti-seen";
 const DURATION_MS = 5000;
-/** Persist "seen" only after the burst has been on screen briefly (survives Strict Mode). */
-const SEEN_AFTER_MS = 600;
 
 function prefersReducedMotion(): boolean {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-function forceReplayFromUrl(): boolean {
-  try {
-    return new URLSearchParams(window.location.search).has("confetti");
-  } catch {
-    return false;
-  }
-}
-
 /**
- * One-shot celebration burst for season browse surfaces.
- * Mounts into document.body so it is never clipped by page overflow.
- * Append `?confetti=1` to force a replay. Skipped when reduced motion is on.
+ * Celebration burst for season browse surfaces (home, year hub, awards catalogue).
+ * Plays on every visit / reload of those pages. Skipped when reduced motion is on.
  */
 export function ConfettiSplash() {
   useEffect(() => {
     if (prefersReducedMotion()) return;
-
-    const force = forceReplayFromUrl();
-    try {
-      if (force) {
-        sessionStorage.removeItem(STORAGE_KEY);
-      } else if (sessionStorage.getItem(STORAGE_KEY) === "1") {
-        return;
-      }
-    } catch {
-      // Private mode — still play once this mount.
-    }
 
     const root = document.createElement("div");
     root.setAttribute("aria-hidden", "true");
@@ -124,21 +101,12 @@ export function ConfettiSplash() {
 
     document.body.appendChild(root);
 
-    const seenTimer = window.setTimeout(() => {
-      try {
-        sessionStorage.setItem(STORAGE_KEY, "1");
-      } catch {
-        // ignore
-      }
-    }, SEEN_AFTER_MS);
-
     const timer = window.setTimeout(() => {
       root.remove();
     }, DURATION_MS);
 
     return () => {
       window.clearTimeout(timer);
-      window.clearTimeout(seenTimer);
       root.remove();
     };
   }, []);
