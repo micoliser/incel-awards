@@ -79,10 +79,6 @@ export default async function AwardDetailPage({ params }: PageProps) {
             <h2 className="font-[family-name:var(--font-display)] text-xl tracking-tight text-ink">
               Criteria
             </h2>
-            <p className="mt-2 text-sm text-ink-muted">
-              Guidance for voters: you pick a nominee; you do not score each
-              criterion separately.
-            </p>
             <div className="mt-6">
               <CriteriaList criteria={award.criteria ?? []} />
             </div>

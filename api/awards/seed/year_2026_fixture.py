@@ -95,9 +95,8 @@ PIONEER_IDEAL = _ideal(
 
 BEST_DRESSED_ABOUT = (
     'This award recognises the staff member who consistently sets the standard '
-    'for professional dressing. It is given in two categories, male and female, '
-    'and rewards a polished appearance that follows the office dress code, day '
-    'after day.'
+    'for professional dressing. It rewards a polished appearance that follows '
+    'the office dress code, day after day.'
 )
 BEST_DRESSED_IDEAL = _ideal(
     'Looks professional and well put together',
@@ -271,11 +270,11 @@ AWARDS = [
         'sort_order': 30,
         'criteria': DEPARTMENT_CRITERIA,
         'nominees': _departments(
-            'Brand & Marketing',
-            'IT',
-            'Admin',
-            'Internal Control',
-            'Operations',
+            'Tourism Department A',
+            'Tourism Department B',
+            'Tourism Department C',
+            'Tourism Department D',
+            'Tourism Department E',
         ),
     },
     {
@@ -291,11 +290,11 @@ AWARDS = [
         'sort_order': 40,
         'criteria': DEPARTMENT_CRITERIA,
         'nominees': _departments(
-            'IT',
-            'Admin',
-            'Transaction Processing',
-            'Accounts',
-            'Flexxus',
+            'Global Department A',
+            'Global Department B',
+            'Global Department C',
+            'Global Department D',
+            'Global Department E',
         ),
     },
     {
@@ -424,11 +423,11 @@ AWARDS = [
         'sort_order': 25,
         'criteria': LEADERSHIP_CRITERIA,
         'nominees': _people(
-            'Benjamin Okoro',
-            'Joy Nwaise',
-            'Uche Maduka',
-            'Marcathy Atsegbua',
-            'Solomon Aneke',
+            'Tourism Leadership A',
+            'Tourism Leadership B',
+            'Tourism Leadership C',
+            'Tourism Leadership D',
+            'Tourism Leadership E',
         ),
     },
     {
@@ -444,11 +443,11 @@ AWARDS = [
         'sort_order': 28,
         'criteria': LEADERSHIP_CRITERIA,
         'nominees': _people(
-            'Oluwaseun Agunkejoye',
-            'Festus Adeoye',
-            'Oyedeji Oyedokun',
-            'Okechukwu Osademe',
-            'Oluwaseyi Elias',
+            'Global Leadership A',
+            'Global Leadership B',
+            'Global Leadership C',
+            'Global Leadership D',
+            'Global Leadership E',
         ),
     },
     {
