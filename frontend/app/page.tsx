@@ -35,15 +35,15 @@ export default async function HomePage() {
       <main className="flex-1">
         <section className="relative min-h-[min(100svh,900px)] overflow-hidden">
           <Image
-            src="/images/hero-mask-kente.jpg"
+            src="/images/hero-afro-classy-eoyp26.jpg"
             alt=""
             fill
             priority
-            className="object-cover object-center"
+            className="object-cover object-[center_40%]"
             sizes="100vw"
           />
           <div
-            className="absolute inset-0 bg-gradient-to-t from-[color-mix(in_srgb,var(--ground)_98%,transparent)] via-[color-mix(in_srgb,var(--ground)_88%,transparent)] to-[color-mix(in_srgb,var(--ground)_70%,transparent)]"
+            className="absolute inset-0 bg-gradient-to-t from-[color-mix(in_srgb,var(--ground)_96%,transparent)] via-[color-mix(in_srgb,var(--ground)_72%,transparent)] to-[color-mix(in_srgb,var(--ground)_45%,transparent)]"
             aria-hidden
           />
           <div className="relative mx-auto flex min-h-[min(100svh,900px)] max-w-6xl flex-col justify-end px-5 pb-16 pt-28 sm:px-8 sm:pb-24 sm:pt-36">
